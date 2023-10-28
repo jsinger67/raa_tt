@@ -14,10 +14,10 @@ And : '&'
 Or  : '|'
     ;
 
-Impl: '->'
+Cond: '->'
     ;
 
-BiImpl
+BiCond
     : '<->'
     ;
 
@@ -40,23 +40,23 @@ Var : /[a-z][_a-zA-Z0-9]*/
 // * Conditional (Implication)
 // * Biconditional (BiImplication)
 RaaTt
-    : BiImplication
+    : Biconditional
     ;
 
-BiImplication
-    : Implication { BiImpl Implication }
+Biconditional
+    : Conditional { BiCond^ Conditional }
     ;
 
-Implication
-    : Disjunction { Impl Disjunction }
+Conditional
+    : Disjunction { Cond^ Disjunction }
     ;
 
 Disjunction
-    : Conjunction { Or Conjunction }
+    : Conjunction { Or^ Conjunction }
     ;
 
 Conjunction
-    : Factor { And Factor }
+    : Factor { And^ Factor }
     ;
 
 Negation
@@ -66,5 +66,5 @@ Negation
 Factor
     : Var
     | Negation
-    | LPar^ BiImplication RPar^
+    | LPar^ Biconditional RPar^
     ;

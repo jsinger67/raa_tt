@@ -1,6 +1,19 @@
 // To run the test please issue:
 // cargo run ./test.txt
 
-    Hello world!
+// Not L-True, p. 76
+// (p -> (!p & r))
+
+// !p -> q
+
+// L-True, p. 75
+p | q | !p
+
+// L-True
+// ((p & q) -> p)
+
+
+// Not L-True, p. 74
+// ((p | q) -> (r -> p))
 
 // End

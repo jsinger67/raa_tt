@@ -3,3 +3,4 @@
 raa_tt-exp.par
 src/raa_tt_parser.rs
 src/raa_tt_grammar_trait.rs
+*.svg
