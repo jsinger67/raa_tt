@@ -1,0 +1,70 @@
+%start RaaTt
+%title "RaaTt grammar"
+%comment "Grammar to define expressions in propositional calculus"
+%line_comment "//"
+
+%%
+
+Not : '!'
+    ;
+
+And : '&'
+    ;
+
+Or  : '|'
+    ;
+
+Impl: '->'
+    ;
+
+BiImpl
+    : '<->'
+    ;
+
+LPar: '('
+    ;
+
+RPar: ')'
+    ;
+
+Var : /[a-z][_a-zA-Z0-9]*/
+    ;
+
+// We use some operator precedence rules which are commonly used in propositional calculus to reduce
+// the number of parentheses needed.
+// Also the top level expression doesn't need to be set in parentheses.
+// Highest to lowest:
+// * Negation
+// * Conjunction
+// * Disjunction
+// * Conditional (Implication)
+// * Biconditional (BiImplication)
+RaaTt
+    : BiImplication
+    ;
+
+BiImplication
+    : Implication { BiImpl Implication }
+    ;
+
+Implication
+    : Disjunction { Impl Disjunction }
+    ;
+
+Disjunction
+    : Conjunction { Or Conjunction }
+    ;
+
+Conjunction
+    : Factor { And Factor }
+    ;
+
+Negation
+    : Not^ Factor
+    ;
+
+Factor
+    : Var
+    | Negation
+    | LPar^ BiImplication RPar^
+    ;
