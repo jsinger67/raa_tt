@@ -7,13 +7,15 @@
 // !p -> q
 
 // L-True, p. 75
-p | q | !p
+// p | q | !p
+
+// a -> b -> c -> d
 
 // L-True
 // ((p & q) -> p)
 
 
 // Not L-True, p. 74
-// ((p | q) -> (r -> p))
+((p | q) -> (r -> p))
 
 // End

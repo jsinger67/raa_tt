@@ -34,8 +34,6 @@ impl Display for RaaTtGrammar<'_> {
 }
 
 impl<'t> RaaTtGrammarTrait<'t> for RaaTtGrammar<'t> {
-    // !Adjust your implementation as needed!
-
     /// Semantic action for non-terminal 'RaaTt'
     fn raa_tt(&mut self, arg: &RaaTt<'t>) -> Result<()> {
         self.raa_tt = Some(arg.clone());

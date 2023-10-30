@@ -2,9 +2,16 @@ extern crate parol_runtime;
 
 mod raa_tt_grammar;
 // The output is version controlled
+mod bi_implication;
+mod conjunction;
+mod disjunction;
+mod implication;
+mod negation;
+mod proposition;
 mod raa_tt_grammar_trait;
 mod raa_tt_parser;
 
+use crate::proposition::Proposition;
 use crate::raa_tt_grammar::RaaTtGrammar;
 use crate::raa_tt_parser::parse;
 use anyhow::{anyhow, Context, Result};
@@ -39,6 +46,9 @@ fn main() -> Result<()> {
                 } else {
                     generate_tree_layout(&syntax_tree, &file_name)?;
                     println!("Success!\n{}", raa_tt_grammar);
+
+                    let proposition: Proposition = raa_tt_grammar.raa_tt.as_ref().unwrap().into();
+                    println!("Parsed expression: {proposition}");
                     Ok(())
                 }
             }
