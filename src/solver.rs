@@ -18,6 +18,16 @@ use crate::{
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum TransformationState {
+    #[default]
+    Unprocessed,
+    Transformed,
+    Closed,
+}
+
+pub(crate) type PropositionTree = DiGraph<(Proposition, TransformationState), ()>;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SolveResult {
     #[default]
     Undefined,
@@ -71,7 +81,7 @@ impl Solver {
         // The nodes of our proposition tree are propositions paired with a boolean to indicate
         // whether the branch is closed (true means closed).
         // This boolean value is only of interest if it's node is a leaf node.
-        let mut graph = DiGraph::<(Proposition, bool), ()>::new();
+        let mut graph = PropositionTree::new();
         self.init_proposition_tree(proposition, &mut graph)?;
         let mut solve_result = SolveResult::Solving;
         while solve_result == SolveResult::Solving {
@@ -85,7 +95,7 @@ impl Solver {
     fn init_proposition_tree(
         &self,
         proposition: &Proposition,
-        graph: &mut DiGraph<(Proposition, bool), ()>,
+        graph: &mut PropositionTree,
     ) -> Result<()> {
         *self.root.borrow_mut() = match proposition {
             Proposition::Void => Err(RaaError::VoidExpression)?,
@@ -93,7 +103,7 @@ impl Solver {
                 Proposition::Negation(Negation {
                     inner: Box::new(proposition.clone()),
                 }),
-                false,
+                TransformationState::default(),
             )),
         };
         Ok(())
@@ -212,25 +222,25 @@ impl Solver {
         })
     }
 
-    fn inner_solve(&self, graph: &mut DiGraph<(Proposition, bool), ()>) -> Result<SolveResult> {
+    fn inner_solve(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let mut changed = false;
         for leaf_node_id in leaf_node_ids {
-            let (end_node_proposition, end_node_closed) = &graph[leaf_node_id];
-            if *end_node_closed {
+            let (end_node_proposition, transformation_state) = &graph[leaf_node_id];
+            if *transformation_state == TransformationState::Closed {
                 continue;
             }
             let (to_add_left, to_add_right) = Self::transform(end_node_proposition)?;
             let mut last_parent_node = leaf_node_id;
             for p in to_add_left {
-                let new_node_id = graph.add_node((p, false));
+                let new_node_id = graph.add_node((p, TransformationState::default()));
                 graph.add_edge(last_parent_node, new_node_id, ());
                 last_parent_node = new_node_id;
                 changed |= true;
             }
             last_parent_node = leaf_node_id;
             for p in to_add_right {
-                let new_node_id = graph.add_node((p, false));
+                let new_node_id = graph.add_node((p, TransformationState::default()));
                 graph.add_edge(last_parent_node, new_node_id, ());
                 last_parent_node = new_node_id;
                 changed |= true;
@@ -242,16 +252,13 @@ impl Solver {
         self.check_all_branches_closed(graph, changed)
     }
 
-    fn update_branches_closed_state(
-        &self,
-        graph: &mut DiGraph<(Proposition, bool), ()>,
-    ) -> Result<SolveResult> {
+    fn update_branches_closed_state(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let root = self.root.borrow();
         let mut leaf_nodes_to_close = vec![];
         for leaf_node_id in leaf_node_ids {
-            let (leaf_node_proposition, leaf_node_closed) = &graph[leaf_node_id];
-            if *leaf_node_closed {
+            let (leaf_node_proposition, transformation_state) = &graph[leaf_node_id];
+            if *transformation_state == TransformationState::Closed {
                 continue;
             }
             // We compare all nodes along the path from the root to this edge node with the two last
@@ -281,19 +288,21 @@ impl Solver {
             }
         }
         for leaf_node_id in leaf_nodes_to_close {
-            let (_, leaf_node_closed) = &mut graph[leaf_node_id];
-            *leaf_node_closed = true;
+            let (_, transformation_state) = &mut graph[leaf_node_id];
+            *transformation_state = TransformationState::Closed;
         }
         Ok(SolveResult::Solving)
     }
 
     fn check_all_branches_closed(
         &self,
-        graph: &DiGraph<(Proposition, bool), ()>,
+        graph: &PropositionTree,
         changed: bool,
     ) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
-        let all_closed = leaf_node_ids.iter().all(|i| graph[*i].1);
+        let all_closed = leaf_node_ids
+            .iter()
+            .all(|i| graph[*i].1 == TransformationState::Closed);
         if all_closed {
             Ok(SolveResult::Proofed)
         } else if changed {
@@ -304,7 +313,7 @@ impl Solver {
     }
 }
 
-fn leaf_nodes(graph: &DiGraph<(Proposition, bool), ()>) -> Vec<NodeIndex<u32>> {
+fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex<u32>> {
     graph
         .node_indices()
         .filter(|i| graph.neighbors(*i).count() == 0)
