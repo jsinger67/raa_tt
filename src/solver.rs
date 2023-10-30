@@ -1,5 +1,9 @@
+use parol_runtime::log::{debug, trace};
 use petgraph::{
-    algo::all_simple_paths, graph::NodeIndex, prelude::DiGraph, visit::EdgeRef, Direction::Incoming,
+    algo::all_simple_paths,
+    dot::{Config, Dot},
+    graph::NodeIndex,
+    prelude::DiGraph,
 };
 use std::{
     cell::RefCell,
@@ -23,6 +27,16 @@ pub(crate) enum TransformationState {
     Unprocessed,
     Transformed,
     Closed,
+}
+
+impl Display for TransformationState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), Error> {
+        match self {
+            TransformationState::Unprocessed => write!(f, "?"),
+            TransformationState::Transformed => write!(f, "✓"),
+            TransformationState::Closed => write!(f, "✖"),
+        }
+    }
 }
 
 pub(crate) type PropositionTree = DiGraph<(Proposition, TransformationState), ()>;
@@ -85,8 +99,28 @@ impl Solver {
         self.init_proposition_tree(proposition, &mut graph)?;
         let mut solve_result = SolveResult::Solving;
         while solve_result == SolveResult::Solving {
+            trace!(
+                "{:?}",
+                Dot::with_attr_getters(
+                    &graph,
+                    &[Config::EdgeNoLabel, Config::NodeNoLabel],
+                    &|_, _| { String::default() },
+                    &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
+                )
+            );
             solve_result = self.inner_solve(&mut graph)?;
         }
+
+        trace!(
+            "{:?}",
+            Dot::with_attr_getters(
+                &graph,
+                &[Config::EdgeNoLabel, Config::NodeNoLabel],
+                &|_, _| { String::default() },
+                &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
+            )
+        );
+
         Ok(solve_result)
     }
 
@@ -112,32 +146,48 @@ impl Solver {
     fn transform(proposition: &Proposition) -> Result<(Vec<Proposition>, Vec<Proposition>)> {
         Ok(match proposition {
             Proposition::Void => Err(RaaError::VoidExpression)?,
-            Proposition::Atom(_) => (vec![], vec![]),
+            Proposition::Atom(a) => {
+                debug!("Transfer Atom {a}");
+                (vec![], vec![])
+            }
             Proposition::Negation(n) => match &*n.inner {
                 // Rule "Double negation"
                 // A branch that contains a proposition in the form ¬¬A can be appended with A.
-                Proposition::Negation(Negation { inner }) => (vec![(**inner).clone()], vec![]),
+                Proposition::Negation(Negation { inner }) => {
+                    debug!("Transfer double negation {n} =>");
+                    debug!("    [{}]", inner);
+                    debug!("    []");
+                    (vec![(**inner).clone()], vec![])
+                }
                 // Rule "Negated biimplication"
                 // A branch that contains a proposition in the form ¬(A <-> B) can be appended with
                 // two new branches, one containing A and ¬B and one containing ¬A and B.
-                Proposition::BiImplication(BiImplication { left, right }) => (
-                    vec![
-                        (**left).clone(),
-                        Proposition::Negation(Negation {
-                            inner: Box::new((**right).clone()),
-                        }),
-                    ],
-                    vec![
-                        Proposition::Negation(Negation {
-                            inner: Box::new((**left).clone()),
-                        }),
-                        (**right).clone(),
-                    ],
-                ),
+                Proposition::BiImplication(BiImplication { left, right }) => {
+                    debug!("Transfer negated biimplication {n} =>");
+                    debug!("    [{}, !{}]", left, right);
+                    debug!("    [!{}, {}]", left, right);
+                    (
+                        vec![
+                            (**left).clone(),
+                            Proposition::Negation(Negation {
+                                inner: Box::new((**right).clone()),
+                            }),
+                        ],
+                        vec![
+                            Proposition::Negation(Negation {
+                                inner: Box::new((**left).clone()),
+                            }),
+                            (**right).clone(),
+                        ],
+                    )
+                }
+                // Rule "Negated implication"
+                // A branch that contains a proposition in the form ¬(A -> B) can be appended
+                // with A and ¬B.
                 Proposition::Implication(Implication { left, right }) => {
-                    // Rule "Negated implication"
-                    // A branch that contains a proposition in the form ¬(A -> B) can be appended
-                    // with A and ¬B.
+                    debug!("Transfer negated implication {n} =>");
+                    debug!("    [{}, !{}]", left, right);
+                    debug!("    []");
                     (
                         vec![
                             (**left).clone(),
@@ -148,10 +198,13 @@ impl Solver {
                         vec![],
                     )
                 }
+                // Rule "Negated disjunction"
+                // A branch that contains a proposition in the form ¬(A ∨ B) can be appended
+                // with ¬A and ¬B.
                 Proposition::Disjunction(Disjunction { left, right }) => {
-                    // Rule "Negated disjunction"
-                    // A branch that contains a proposition in the form ¬(A ∨ B) can be appended
-                    // with ¬A and ¬B.
+                    debug!("Transfer negated disjunction {n} =>");
+                    debug!("    [!{}, !{}]", left, right);
+                    debug!("    []");
                     (
                         vec![
                             Proposition::Negation(Negation {
@@ -164,10 +217,13 @@ impl Solver {
                         vec![],
                     )
                 }
+                // Rule "Negated conjunction"
+                // A branch that contains a proposition in the form ¬(A ∧ B) can be appended
+                // with two new branches ¬A and ¬B.
                 Proposition::Conjunction(Conjunction { left, right }) => {
-                    // Rule "Negated conjunction"
-                    // A branch that contains a proposition in the form ¬(A ∧ B) can be appended
-                    // with two new branches ¬A and ¬B.
+                    debug!("Transfer negated conjunction {n} =>");
+                    debug!("    [!{}]", left);
+                    debug!("    [!{}]", right);
                     (
                         vec![Proposition::Negation(Negation {
                             inner: Box::new((**left).clone()),
@@ -180,10 +236,13 @@ impl Solver {
                 // Otherwise no changes
                 _ => (vec![], vec![]),
             },
+            // Rule "Implication"
+            // A branch that contains a proposition in the form A -> B can be appended with two
+            // new branches ¬A and B.
             Proposition::Implication(Implication { left, right }) => {
-                // Rule "Implication"
-                // A branch that contains a proposition in the form A -> B can be appended with two
-                // new branches ¬A and B.
+                debug!("Transfer implication {proposition} =>");
+                debug!("    [!{}]", left);
+                debug!("    [{}]", right);
                 (
                     vec![Proposition::Negation(Negation {
                         inner: Box::new((**left).clone()),
@@ -191,10 +250,13 @@ impl Solver {
                     vec![(**right).clone()],
                 )
             }
+            // Rule "BiImplication"
+            // A branch that contains a proposition in the form A <-> B can be appended with two
+            // new branches, one containing A and B and one containing ¬A and ¬B.
             Proposition::BiImplication(BiImplication { left, right }) => {
-                // Rule "BiImplication"
-                // A branch that contains a proposition in the form A <-> B can be appended with two
-                // new branches, one containing A and B and one containing ¬A and ¬B.
+                debug!("Transfer biimplication {proposition} =>");
+                debug!("    [{}, {}]", left, right);
+                debug!("    [!{}, !{}]", left, right);
                 (
                     vec![(**left).clone(), (**right).clone()],
                     vec![
@@ -207,16 +269,22 @@ impl Solver {
                     ],
                 )
             }
+            // Rule "Disjunction"
+            // A branch that contains a proposition in the form A ∨ B can be appended with two
+            // new branches A and B.
             Proposition::Disjunction(Disjunction { left, right }) => {
-                // Rule "Disjunction"
-                // A branch that contains a proposition in the form A ∨ B can be appended with two
-                // new branches A and B.
+                debug!("Transfer disjunction {proposition} =>");
+                debug!("    [{}]", left);
+                debug!("    [{}]", right);
                 (vec![(**left).clone()], vec![(**right).clone()])
             }
+            // Rule "Conjunction"
+            // A branch that contains a proposition in the form A ∧ B can be appended with A and
+            // B.
             Proposition::Conjunction(Conjunction { left, right }) => {
-                // Rule "Conjunction"
-                // A branch that contains a proposition in the form A ∧ B can be appended with A and
-                // B.
+                debug!("Transfer conjunction {proposition} =>");
+                debug!("    [{}, {}]", left, right);
+                debug!("    []");
                 (vec![(**left).clone(), (**right).clone()], vec![])
             }
         })
@@ -226,23 +294,29 @@ impl Solver {
         let leaf_node_ids = leaf_nodes(graph);
         let mut changed = false;
         for leaf_node_id in leaf_node_ids {
-            let (end_node_proposition, transformation_state) = &graph[leaf_node_id];
+            let (_, transformation_state) = &graph[leaf_node_id];
             if *transformation_state == TransformationState::Closed {
                 continue;
             }
-            let (to_add_left, to_add_right) = Self::transform(end_node_proposition)?;
-            let mut last_parent_node = leaf_node_id;
-            for p in to_add_left {
-                let new_node_id = graph.add_node((p, TransformationState::default()));
-                graph.add_edge(last_parent_node, new_node_id, ());
-                last_parent_node = new_node_id;
-                changed |= true;
-            }
-            last_parent_node = leaf_node_id;
-            for p in to_add_right {
-                let new_node_id = graph.add_node((p, TransformationState::default()));
-                graph.add_edge(last_parent_node, new_node_id, ());
-                last_parent_node = new_node_id;
+            let ancestors = self.ancestors(&*graph, leaf_node_id);
+            if let Some(unprocessed_node) = ancestors
+                .iter()
+                .find(|i| graph[**i].1 == TransformationState::Unprocessed)
+            {
+                let (to_add_left, to_add_right) = Self::transform(&graph[*unprocessed_node].0)?;
+                let mut last_parent_node = leaf_node_id;
+                for p in to_add_left {
+                    let new_node_id = graph.add_node((p, TransformationState::default()));
+                    graph.add_edge(last_parent_node, new_node_id, ());
+                    last_parent_node = new_node_id;
+                }
+                last_parent_node = leaf_node_id;
+                for p in to_add_right {
+                    let new_node_id = graph.add_node((p, TransformationState::default()));
+                    graph.add_edge(last_parent_node, new_node_id, ());
+                    last_parent_node = new_node_id;
+                }
+                graph[*unprocessed_node].1 = TransformationState::Transformed;
                 changed |= true;
             }
         }
@@ -254,37 +328,25 @@ impl Solver {
 
     fn update_branches_closed_state(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
-        let root = self.root.borrow();
         let mut leaf_nodes_to_close = vec![];
         for leaf_node_id in leaf_node_ids {
-            let (leaf_node_proposition, transformation_state) = &graph[leaf_node_id];
+            let (_, transformation_state) = &graph[leaf_node_id];
             if *transformation_state == TransformationState::Closed {
                 continue;
             }
-            // We compare all nodes along the path from the root to this edge node with the two last
-            // nodes which possibly have been appended during the last transformation step.
-            // We use the negated value to be able to identify pairs of (A, ¬A) in the branch.
-            let comparison = match *leaf_node_proposition {
-                Proposition::Negation(ref n) => (*n.inner).clone(),
-                _ => (*leaf_node_proposition).clone(),
-            };
-            let (comparison_2, comparison_2_id) = graph
-                .edges_directed(leaf_node_id, Incoming)
-                .find(|e| e.target() == leaf_node_id)
-                .map_or((Proposition::Void, NodeIndex::end()), |e| {
-                    (graph[e.source()].0.clone(), e.source())
-                });
-            let comparison_2 = match comparison_2 {
-                Proposition::Negation(n) => *n.inner,
-                _ => comparison_2,
-            };
-            for p in all_simple_paths::<Vec<_>, _>(&*graph, *root, leaf_node_id, 1, None) {
-                if p.iter().any(|i| {
-                    graph[*i].0 == comparison
-                        || (*i != comparison_2_id && graph[*i].0 == comparison_2)
-                }) {
-                    leaf_nodes_to_close.push(leaf_node_id);
+            // We compare all nodes along the path from the root to this edge node with each other.
+            let ancestors = self.ancestors(&*graph, leaf_node_id);
+            let pairs = pairwise(&ancestors);
+            if pairs.iter().any(|(i, j)| {
+                let (a, _) = &graph[**i];
+                let (b, _) = &graph[**j];
+                match (a, b) {
+                    (Proposition::Negation(n), _) => *n.inner == *b,
+                    (_, Proposition::Negation(n)) => *n.inner == *a,
+                    _ => false,
                 }
+            }) {
+                leaf_nodes_to_close.push(leaf_node_id);
             }
         }
         for leaf_node_id in leaf_nodes_to_close {
@@ -311,6 +373,33 @@ impl Solver {
             Ok(SolveResult::FalsifiedOrContingent)
         }
     }
+
+    fn ancestors(&self, graph: &PropositionTree, node_id: NodeIndex) -> Vec<NodeIndex> {
+        let paths = all_simple_paths::<Vec<_>, _>(graph, *self.root.borrow(), node_id, 0, None)
+            .collect::<Vec<_>>();
+        // Tree constraint:
+        // At most one path should exist from root to this end node.
+        debug_assert!(paths.len() < 2, "length was {}", paths.len());
+        if paths.is_empty() {
+            vec![*self.root.borrow()]
+        } else {
+            // Path constraint:
+            // The target node should be contained in the list of ancestors.
+            debug_assert!(paths[0].contains(&node_id));
+            paths[0].clone()
+        }
+    }
+}
+
+/// Generate pairs of elements in a slice without redundances.
+fn pairwise<T>(v: &[T]) -> Vec<(&T, &T)> {
+    let mut result = Vec::with_capacity(v.len());
+    for (i, a) in v.iter().enumerate() {
+        for b in v.iter().skip(i + 1) {
+            result.push((a, b));
+        }
+    }
+    result
 }
 
 fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex<u32>> {
@@ -318,4 +407,27 @@ fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex<u32>> {
         .node_indices()
         .filter(|i| graph.neighbors(*i).count() == 0)
         .collect::<Vec<NodeIndex<u32>>>()
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::solver::pairwise;
+
+    #[test]
+    fn test_pairwise() {
+        let v = vec!['i', 'j', 'k', 'l'];
+        let pairs = pairwise(&v);
+        assert_eq!(
+            vec![
+                (&'i', &'j'),
+                (&'i', &'k'),
+                (&'i', &'l'),
+                (&'j', &'k'),
+                (&'j', &'l'),
+                (&'k', &'l')
+            ],
+            pairs
+        );
+    }
 }

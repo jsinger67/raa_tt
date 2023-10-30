@@ -55,7 +55,10 @@ fn main() -> Result<()> {
 
                     let solver = Solver::new();
                     let solve_result = solver.solve(&proposition);
-                    println!("Solve result: {solve_result:?}");
+                    match solve_result {
+                        Ok(r) => println!("{proposition} is {r}"),
+                        Err(e) => println!("Error occurred: {e}"),
+                    }
                     Ok(())
                 }
             }
