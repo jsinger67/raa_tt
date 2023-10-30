@@ -1,7 +1,7 @@
 use crate::proposition::Proposition;
 use std::fmt::{Debug, Display, Error, Formatter};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) struct Disjunction {
     pub(crate) left: Box<Proposition>,
     pub(crate) right: Box<Proposition>,
