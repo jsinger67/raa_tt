@@ -529,6 +529,7 @@ dependencies = [
  "env_logger",
  "parol",
  "parol_runtime",
+ "petgraph",
  "syntree_layout",
  "thiserror",
 ]

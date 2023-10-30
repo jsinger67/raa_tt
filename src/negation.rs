@@ -1,7 +1,7 @@
 use crate::proposition::Proposition;
 use std::fmt::{Display, Error, Formatter};
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct Negation {
     pub(crate) inner: Box<Proposition>,
 }

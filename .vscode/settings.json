@@ -1,7 +1,10 @@
 {
     "cSpell.words": [
         "Biconditional",
+        "biimplication",
+        "clsd",
         "Cond",
+        "petgraph",
         "syntree"
     ]
 }

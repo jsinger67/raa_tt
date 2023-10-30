@@ -5,7 +5,7 @@ use crate::{
     implication::Implication, negation::Negation,
 };
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) enum Proposition {
     #[default]
     Void,

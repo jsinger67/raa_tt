@@ -5,15 +5,18 @@ mod raa_tt_grammar;
 mod bi_implication;
 mod conjunction;
 mod disjunction;
+mod errors;
 mod implication;
 mod negation;
 mod proposition;
 mod raa_tt_grammar_trait;
 mod raa_tt_parser;
+mod solver;
 
 use crate::proposition::Proposition;
 use crate::raa_tt_grammar::RaaTtGrammar;
 use crate::raa_tt_parser::parse;
+use crate::solver::Solver;
 use anyhow::{anyhow, Context, Result};
 use parol_runtime::syntree_layout::Layouter;
 use parol_runtime::ParseTree;
@@ -49,6 +52,10 @@ fn main() -> Result<()> {
 
                     let proposition: Proposition = raa_tt_grammar.raa_tt.as_ref().unwrap().into();
                     println!("Parsed expression: {proposition}");
+
+                    let solver = Solver::new();
+                    let solve_result = solver.solve(&proposition);
+                    println!("Solve result: {solve_result:?}");
                     Ok(())
                 }
             }
