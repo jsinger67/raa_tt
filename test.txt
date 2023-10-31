@@ -1,12 +1,12 @@
 // To run the test please issue:
 // cargo run ./test.txt
 
-// Not L-True, p. 76
+// Not L-True
 // (p -> (!p & r))
 
 // !p -> q
 
-// L-True, p. 75
+// L-True
 // p | q | !p
 
 // a -> b -> c -> d
