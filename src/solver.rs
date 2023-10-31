@@ -39,6 +39,8 @@ impl Display for TransformationState {
     }
 }
 
+// The nodes of our proposition tree are propositions paired with a transformation state to indicate
+// whether a node has been processed already or whether the branch is closed.
 pub(crate) type PropositionTree = DiGraph<(Proposition, TransformationState), ()>;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -49,7 +51,8 @@ pub(crate) enum SolveResult {
     Solving,
     //
     Proofed,
-    FalsifiedOrContingent,
+    Contingent,
+    Falsified,
 }
 
 impl From<bool> for SolveResult {
@@ -57,7 +60,7 @@ impl From<bool> for SolveResult {
         if value {
             SolveResult::Proofed
         } else {
-            SolveResult::FalsifiedOrContingent
+            SolveResult::Contingent
         }
     }
 }
@@ -68,7 +71,8 @@ impl Display for SolveResult {
             SolveResult::Undefined => write!(f, "Undefined"),
             SolveResult::Solving => write!(f, "Solving"),
             SolveResult::Proofed => write!(f, "Proofed"),
-            SolveResult::FalsifiedOrContingent => write!(f, "Falsified or contingent"),
+            SolveResult::Contingent => write!(f, "Contingent"),
+            SolveResult::Falsified => write!(f, "Falsified"),
         }
     }
 }
@@ -92,15 +96,21 @@ impl Solver {
     /// The return value in case of `Err` is detailed in [crate::errors::RaaError].
     ///
     pub(crate) fn solve(&self, proposition: &Proposition) -> Result<SolveResult> {
-        // The nodes of our proposition tree are propositions paired with a boolean to indicate
-        // whether the branch is closed (true means closed).
-        // This boolean value is only of interest if it's node is a leaf node.
-        let mut graph = PropositionTree::new();
-        self.init_proposition_tree(proposition, &mut graph)?;
+        let mut solve_result = self.try_proof(proposition, true)?;
+        if solve_result == SolveResult::Contingent {
+            solve_result = self.try_proof(proposition, false)?;
+        }
+        Ok(solve_result)
+    }
+
+    fn try_proof(&self, proposition: &Proposition, negated: bool) -> Result<SolveResult> {
         let mut solve_result = SolveResult::Solving;
+        let mut graph = PropositionTree::new();
+        self.init_proposition_tree(proposition, &mut graph, negated)?;
         while solve_result == SolveResult::Solving {
             trace!(
-                "{:?}",
+                "{}{:?}",
+                if negated { "neg " } else { "" },
                 Dot::with_attr_getters(
                     &graph,
                     &[Config::EdgeNoLabel, Config::NodeNoLabel],
@@ -108,11 +118,11 @@ impl Solver {
                     &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
                 )
             );
-            solve_result = self.inner_solve(&mut graph)?;
+            solve_result = self.inner_solve(&mut graph, negated)?;
         }
-
         trace!(
-            "{:?}",
+            "{}{:?}",
+            if negated { "neg " } else { "" },
             Dot::with_attr_getters(
                 &graph,
                 &[Config::EdgeNoLabel, Config::NodeNoLabel],
@@ -120,23 +130,27 @@ impl Solver {
                 &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
             )
         );
-
         Ok(solve_result)
     }
 
-    // We insert a negated variant of our proposition and try to refute it later.
-    // The node id of the root is stored in `self.root`.
+    // We insert a (possibly negated) variant of our proposition and try to refute it later.
     fn init_proposition_tree(
         &self,
         proposition: &Proposition,
         graph: &mut PropositionTree,
+        negate: bool,
     ) -> Result<()> {
+        // The node id of the root is stored in `self.root`.
         *self.root.borrow_mut() = match proposition {
             Proposition::Void => Err(RaaError::VoidExpression)?,
             _ => graph.add_node((
-                Proposition::Negation(Negation {
-                    inner: Box::new(proposition.clone()),
-                }),
+                if negate {
+                    Proposition::Negation(Negation {
+                        inner: Box::new(proposition.clone()),
+                    })
+                } else {
+                    proposition.clone()
+                },
                 TransformationState::default(),
             )),
         };
@@ -290,7 +304,7 @@ impl Solver {
         })
     }
 
-    fn inner_solve(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
+    fn inner_solve(&self, graph: &mut PropositionTree, negated: bool) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let mut changed = false;
         for leaf_node_id in leaf_node_ids {
@@ -323,7 +337,7 @@ impl Solver {
         if changed {
             self.update_branches_closed_state(graph)?;
         }
-        self.check_all_branches_closed(graph, changed)
+        self.check_all_branches_closed(graph, changed, negated)
     }
 
     fn update_branches_closed_state(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
@@ -360,17 +374,26 @@ impl Solver {
         &self,
         graph: &PropositionTree,
         changed: bool,
+        negated: bool,
     ) -> Result<SolveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let all_closed = leaf_node_ids
             .iter()
             .all(|i| graph[*i].1 == TransformationState::Closed);
         if all_closed {
-            Ok(SolveResult::Proofed)
+            // This means all branches contain contradictions!
+            Ok(if negated {
+                // We used the negated proposition to refute it which indirectly proofed it's truth.
+                SolveResult::Proofed
+            } else {
+                // We used the original proposition to refute it which directly falsified it.
+                SolveResult::Falsified
+            })
         } else if changed {
+            // We need to continue until no branches can be developed anymore.
             Ok(SolveResult::Solving)
         } else {
-            Ok(SolveResult::FalsifiedOrContingent)
+            Ok(SolveResult::Contingent)
         }
     }
 
