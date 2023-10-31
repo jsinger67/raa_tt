@@ -40,4 +40,16 @@
 // (!p | !q) & (p <-> !r) -> !(q & r)
 
 // Contingent
-!(p & q <-> !(p & q) | !q)
+// !(p & q <-> !(p & q) | !q)
+
+// L-True - Modus Ponens
+// p & (p -> q) -> q
+
+// L-True - Disjunctive syllogism
+// (p | q) & !p -> q
+
+// Contingent
+// q & (p -> q) -> p
+
+// L-True
+p -> q -> (p & r -> p)

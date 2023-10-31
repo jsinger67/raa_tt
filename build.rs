@@ -14,6 +14,7 @@ fn main() {
         .enable_auto_generation()
         .user_type_name("RaaTtGrammar")
         .user_trait_module_name("raa_tt_grammar")
+        .trim_parse_tree()
         .generate_parser()
     {
         ParolErrorReporter::report_error(&err, "raa_tt.par").unwrap_or_default();

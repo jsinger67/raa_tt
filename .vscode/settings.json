@@ -5,6 +5,7 @@
         "clsd",
         "Cond",
         "petgraph",
+        "Ponens",
         "syntree"
     ]
 }
