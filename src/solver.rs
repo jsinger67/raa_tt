@@ -4,6 +4,7 @@ use petgraph::{
     dot::{Config, Dot},
     graph::NodeIndex,
     prelude::DiGraph,
+    visit::DfsPostOrder,
 };
 use std::{
     cell::RefCell,
@@ -55,16 +56,6 @@ pub(crate) enum SolveResult {
     Falsified,
 }
 
-impl From<bool> for SolveResult {
-    fn from(value: bool) -> Self {
-        if value {
-            SolveResult::Proofed
-        } else {
-            SolveResult::Contingent
-        }
-    }
-}
-
 impl Display for SolveResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), Error> {
         match self {
@@ -78,7 +69,7 @@ impl Display for SolveResult {
 }
 
 pub(crate) struct Solver {
-    root: RefCell<NodeIndex<u32>>,
+    root: RefCell<NodeIndex>,
 }
 
 impl Solver {
@@ -115,7 +106,7 @@ impl Solver {
                     &graph,
                     &[Config::EdgeNoLabel, Config::NodeNoLabel],
                     &|_, _| { String::default() },
-                    &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
+                    &|g, n| { format!("label = \"{} ({}, {})\"", g[n.0].0, n.0.index(), g[n.0].1) }
                 )
             );
             solve_result = self.inner_solve(&mut graph, negated)?;
@@ -127,7 +118,7 @@ impl Solver {
                 &graph,
                 &[Config::EdgeNoLabel, Config::NodeNoLabel],
                 &|_, _| { String::default() },
-                &|g, n| { format!("label = \"{} ({})\"", g[n.0].0, g[n.0].1) }
+                &|g, n| { format!("label = \"{} ({}, {})\"", g[n.0].0, n.0.index(), g[n.0].1) }
             )
         );
         Ok(solve_result)
@@ -305,34 +296,26 @@ impl Solver {
     }
 
     fn inner_solve(&self, graph: &mut PropositionTree, negated: bool) -> Result<SolveResult> {
-        let leaf_node_ids = leaf_nodes(graph);
         let mut changed = false;
-        for leaf_node_id in leaf_node_ids {
-            let (_, transformation_state) = &graph[leaf_node_id];
-            if *transformation_state == TransformationState::Closed {
-                continue;
-            }
-            let ancestors = self.ancestors(&*graph, leaf_node_id);
-            if let Some(unprocessed_node) = ancestors
-                .iter()
-                .find(|i| graph[**i].1 == TransformationState::Unprocessed)
-            {
-                let (to_add_left, to_add_right) = Self::transform(&graph[*unprocessed_node].0)?;
+        if let Some(unprocessed_node) = self.find_unprocessed_node(graph) {
+            let (to_add_left, to_add_right) = Self::transform(&graph[unprocessed_node].0)?;
+            let leafs_to_append = uncloses_leaf_nodes_of(graph, unprocessed_node);
+            for leaf_node_id in leafs_to_append {
                 let mut last_parent_node = leaf_node_id;
-                for p in to_add_left {
-                    let new_node_id = graph.add_node((p, TransformationState::default()));
+                for p in &to_add_left {
+                    let new_node_id = graph.add_node((p.clone(), TransformationState::default()));
                     graph.add_edge(last_parent_node, new_node_id, ());
                     last_parent_node = new_node_id;
                 }
                 last_parent_node = leaf_node_id;
-                for p in to_add_right {
-                    let new_node_id = graph.add_node((p, TransformationState::default()));
+                for p in &to_add_right {
+                    let new_node_id = graph.add_node((p.clone(), TransformationState::default()));
                     graph.add_edge(last_parent_node, new_node_id, ());
                     last_parent_node = new_node_id;
                 }
-                graph[*unprocessed_node].1 = TransformationState::Transformed;
-                changed |= true;
             }
+            graph[unprocessed_node].1 = TransformationState::Transformed;
+            changed |= true;
         }
         if changed {
             self.update_branches_closed_state(graph)?;
@@ -412,6 +395,13 @@ impl Solver {
             paths[0].clone()
         }
     }
+
+    fn find_unprocessed_node(&self, graph: &mut PropositionTree) -> Option<NodeIndex> {
+        graph.node_indices().find(|i| {
+            let node = &graph[*i];
+            node.1 == TransformationState::Unprocessed
+        })
+    }
 }
 
 /// Generate pairs of elements in a slice without redundances.
@@ -425,11 +415,22 @@ fn pairwise<T>(v: &[T]) -> Vec<(&T, &T)> {
     result
 }
 
-fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex<u32>> {
+fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex> {
     graph
         .node_indices()
         .filter(|i| graph.neighbors(*i).count() == 0)
-        .collect::<Vec<NodeIndex<u32>>>()
+        .collect::<Vec<NodeIndex>>()
+}
+
+fn uncloses_leaf_nodes_of(graph: &PropositionTree, start: NodeIndex) -> Vec<NodeIndex> {
+    let mut dfs = DfsPostOrder::new(graph, start);
+    let mut result = Vec::new();
+    while let Some(i) = dfs.next(graph) {
+        if graph[i].1 != TransformationState::Closed && graph.neighbors(i).count() == 0 {
+            result.push(i)
+        }
+    }
+    result
 }
 
 #[cfg(test)]

@@ -15,22 +15,22 @@
 // ((p & q) -> p)
 
 
-// Not L-True, p. 74
+// Contingent
 // ((p | q) -> (r -> p))
 
+// L-True
 // p -> (q -> r | p)
 
+// L-True
 // p & q -> p
 
-// p -> (q -> r | p)
-
+// L-True
 // (p -> q) -> ((q -> r) -> (p -> r))
 
 // Contingent
 // !((!p | !q) & (p <-> !r) -> !(q & r))
 
-// p -> (q -> r | p)
-
+// Contingent
 // p & q <-> !(p & q) | !q
 
 // p & !p
@@ -39,4 +39,5 @@
 
 // (!p | !q) & (p <-> !r) -> !(q & r)
 
+// Contingent
 !(p & q <-> !(p & q) | !q)
