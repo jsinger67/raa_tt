@@ -5,7 +5,7 @@ categories = ["science", "mathematics", "parser-implementations"]
 description = "Proves sentences of propositional calculus"
 documentation = "https://docs.rs/raa_tt"
 edition = "2021"
-keywords = ["propositional calculus"]
+keywords = ["propositional", "calculus"]
 license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
