@@ -45,7 +45,7 @@ impl Display for TransformationState {
 pub(crate) type PropositionTree = DiGraph<(Proposition, TransformationState), ()>;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum SolveResult {
+pub enum SolveResult {
     #[default]
     Undefined,
     // Solve process is still ongoing
@@ -68,15 +68,22 @@ impl Display for SolveResult {
     }
 }
 
-pub(crate) struct Solver {
+#[derive(Debug)]
+pub struct Solver {
     root: RefCell<NodeIndex>,
 }
 
-impl Solver {
-    pub(crate) fn new() -> Self {
+impl Default for Solver {
+    fn default() -> Self {
         Self {
             root: RefCell::new(NodeIndex::end()),
         }
+    }
+}
+
+impl Solver {
+    pub fn new() -> Self {
+        Self::default()
     }
     /// The [solve] function tries do proof the given proposition by assuming the opposite
     /// and then trying to find a contradiction. If a contradiction is found we have proven the
@@ -86,7 +93,7 @@ impl Solver {
     /// If the value is `SolveResult::Contradiction` then the proposition is L-TRUE.
     /// The return value in case of `Err` is detailed in [crate::errors::RaaError].
     ///
-    pub(crate) fn solve(&self, proposition: &Proposition) -> Result<SolveResult> {
+    pub fn solve(&self, proposition: &Proposition) -> Result<SolveResult> {
         let mut solve_result = self.try_proof(proposition, true)?;
         if solve_result == SolveResult::Contingent {
             solve_result = self.try_proof(proposition, false)?;

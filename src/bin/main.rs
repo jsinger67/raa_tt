@@ -1,27 +1,14 @@
 extern crate parol_runtime;
 
-mod raa_tt_grammar;
-// The output is version controlled
-mod bi_implication;
-mod conjunction;
-mod disjunction;
-mod errors;
-mod implication;
-mod negation;
-mod proposition;
-mod raa_tt_grammar_trait;
-mod raa_tt_parser;
-mod solver;
-
-use crate::proposition::Proposition;
-use crate::raa_tt_grammar::RaaTtGrammar;
-use crate::raa_tt_parser::parse;
-use crate::solver::Solver;
 use anyhow::{anyhow, Context, Result};
 use parol_runtime::{log::debug, Report};
+use raa_tt::proposition::Proposition;
+use raa_tt::raa_tt_grammar::RaaTtGrammar;
+use raa_tt::raa_tt_parser::parse;
+use raa_tt::solver::Solver;
 use std::{env, fs, time::Instant};
 
-// To generate:
+// To generate on command line:
 // parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar -g
 
 struct ErrorReporter;

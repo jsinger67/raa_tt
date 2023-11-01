@@ -2,9 +2,9 @@ use crate::proposition::Proposition;
 use std::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct BiImplication {
-    pub(crate) left: Box<Proposition>,
-    pub(crate) right: Box<Proposition>,
+pub struct BiImplication {
+    pub left: Box<Proposition>,
+    pub right: Box<Proposition>,
 }
 
 impl Display for BiImplication {

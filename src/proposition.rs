@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) enum Proposition {
+pub enum Proposition {
     #[default]
     Void,
     Atom(String),
