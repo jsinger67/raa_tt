@@ -1,4 +1,4 @@
-# raa_tt - Proofer for sentences of propositional calculus
+# raa_tt - Prover for sentences of propositional calculus
 
 *Reductio ad absurdum* using the *truth tree* method as decision procedure for sentences of
 propositional logic.
