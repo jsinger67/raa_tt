@@ -1,55 +1,112 @@
 // To run the test please issue:
 // cargo run ./test.txt
 
-// Not L-True
-// (p -> (!p & r))
-
-// !p -> q
-
-// L-True
-// p | q | !p
-
-// a -> b -> c -> d
-
-// L-True
-// ((p & q) -> p)
-
+// Contingent
+(p -> (!p & r))
 
 // Contingent
-// ((p | q) -> (r -> p))
+!p -> q
 
-// L-True
-// p -> (q -> r | p)
-
-// L-True
-// p & q -> p
-
-// L-True
-// (p -> q) -> ((q -> r) -> (p -> r))
+// Logically True
+p | q | !p
 
 // Contingent
-// !((!p | !q) & (p <-> !r) -> !(q & r))
+a -> b -> c -> d
+
+// Logically True
+((p & q) -> p)
 
 // Contingent
-// p & q <-> !(p & q) | !q
+((p | q) -> (r -> p))
 
-// p & !p
+// Logically True
+p -> (q -> r | p)
 
-// p | !p
+// Logically True
+p & q -> p
 
-// (!p | !q) & (p <-> !r) -> !(q & r)
-
-// Contingent
-// !(p & q <-> !(p & q) | !q)
-
-// L-True - Modus Ponens
-// p & (p -> q) -> q
-
-// L-True - Disjunctive syllogism
-// (p | q) & !p -> q
+// Logically True
+(p -> q) -> ((q -> r) -> (p -> r))
 
 // Contingent
-// q & (p -> q) -> p
+!((!p | !q) & (p <-> !r) -> !(q & r))
 
-// L-True
+// Logically False
+p & q <-> !(p & q) | !q
+
+// Logically False
+p & !p
+
+// Logically True
+p | !p
+
+// Contingent
+(!p | !q) & (p <-> !r) -> !(q & r)
+
+// Logically True
+!(p & q <-> !(p & q) | !q)
+
+// Contingent
+q & (p -> q) -> p
+
+// Logically True
 p -> q -> (p & r -> p)
+
+// Logically True
+p & (!q -> !p) -> q
+
+
+// -----------------------------------
+// Some important valid argument forms
+// -----------------------------------
+
+// Logically True - Modus Ponens
+p & (p -> q) -> q
+
+// Logically True - Modus Tollens
+!q & (p -> q) -> !p
+
+// Logically True - Disjunctive syllogism
+(p | q) & !p -> q
+// as well as
+(p | q) & !q -> p
+
+// Logically True - Addition
+p -> (p | q)
+// as well as
+p -> (q | p)
+
+// Logically True - Simplification
+p & q -> p
+// as well as
+p & q -> q
+
+// Logically True - Double negation
+!!p -> p
+
+// Logically True - Transitivity of implication
+((p -> q) & (q -> r)) -> (p -> r)
+
+// Logically True - "Dreierschluss"
+(p -> (q -> r)) -> ((p -> q) -> (p -> r))
+
+// Logically True - "Constructive dilemma"
+((p -> q) & (r -> s) & (p | r)) -> q | s
+
+// Logically True - "Destructive dilemma"
+(p -> q) & (r -> s) & (!q | !s) -> !p | !r
+
+// Logically True - Reiteration, trivial argument
+p -> p
+
+// Logically True - mEFQ
+!p -> (p -> q)
+
+// Logically True - mVEQ
+q -> (p -> q)
+
+// Logically True - lEFQ
+p & !p -> q
+
+// Logically True - lVEQ
+p -> (q | !q)

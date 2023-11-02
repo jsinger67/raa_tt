@@ -3,9 +3,9 @@ extern crate parol_runtime;
 use anyhow::{anyhow, Context, Result};
 use parol_runtime::{log::debug, Report};
 use raa_tt::proposition::Proposition;
+use raa_tt::prover::Prover;
 use raa_tt::raa_tt_grammar::RaaTtGrammar;
 use raa_tt::raa_tt_parser::parse;
-use raa_tt::solver::Solver;
 use std::{env, fs, time::Instant};
 
 // To generate on command line:
@@ -21,6 +21,7 @@ fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() >= 2 {
         let file_name = args[1].clone();
+        let quiet = args.len() > 2 && args[2] == "-q";
         let input = fs::read_to_string(file_name.clone())
             .with_context(|| format!("Can't read file {}", file_name))?;
         let mut raa_tt_grammar = RaaTtGrammar::new();
@@ -28,15 +29,24 @@ fn main() -> Result<()> {
         match parse(&input, &file_name, &mut raa_tt_grammar) {
             Ok(_) => {
                 let elapsed_time = now.elapsed();
-                println!("Parsing took {} milliseconds.", elapsed_time.as_millis());
-                let proposition: Proposition = raa_tt_grammar.raa_tt.as_ref().unwrap().into();
-                println!("Parsed expression: {proposition}");
+                if !quiet {
+                    println!("Parsing took {} milliseconds.", elapsed_time.as_millis());
+                }
+                for p in &raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list {
+                    let proposition: Proposition = (&*p.biconditional).into();
+                    if !quiet {
+                        println!("Parsed expression: {proposition}");
+                    }
 
-                let solver = Solver::new();
-                let solve_result = solver.solve(&proposition);
-                match solve_result {
-                    Ok(r) => println!("{proposition} is {r}"),
-                    Err(e) => println!("Error occurred: {e}"),
+                    let solver = Prover::new();
+                    let solve_result = solver.prove(&proposition);
+                    match solve_result {
+                        Ok(r) => {
+                            println!("// {r}");
+                            println!("{proposition}\n");
+                        }
+                        Err(e) => println!("Error occurred: {e}"),
+                    }
                 }
                 Ok(())
             }

@@ -4,8 +4,11 @@
         "biimplication",
         "clsd",
         "Cond",
+        "Dreierschluss",
+        "IVEQ",
         "petgraph",
         "Ponens",
-        "syntree"
+        "syntree",
+        "Tollens"
     ]
 }

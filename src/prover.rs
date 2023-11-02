@@ -44,36 +44,47 @@ impl Display for TransformationState {
 // whether a node has been processed already or whether the branch is closed.
 pub(crate) type PropositionTree = DiGraph<(Proposition, TransformationState), ()>;
 
+/// The outcome of the prover algorithm for a specific proposition
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub enum SolveResult {
+pub enum ProveResult {
+    /// Default value
+    /// Meaningless
     #[default]
     Undefined,
-    // Solve process is still ongoing
-    Solving,
-    //
-    Proofed,
+
+    /// Solve process is still ongoing
+    Processing,
+
+    /// *Tautology*
+    /// The proposition is always TRUE independent from the values of its variables
+    Proven,
+
+    /// The propositions truth dependents on the values of its variables
     Contingent,
+
+    /// *Contradiction*
+    /// The proposition is always FALSE independent from the values of its variables
     Falsified,
 }
 
-impl Display for SolveResult {
+impl Display for ProveResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), Error> {
         match self {
-            SolveResult::Undefined => write!(f, "Undefined"),
-            SolveResult::Solving => write!(f, "Solving"),
-            SolveResult::Proofed => write!(f, "Proofed"),
-            SolveResult::Contingent => write!(f, "Contingent"),
-            SolveResult::Falsified => write!(f, "Falsified"),
+            ProveResult::Undefined => write!(f, "Undefined"),
+            ProveResult::Processing => write!(f, "Processing"),
+            ProveResult::Proven => write!(f, "Logically True"),
+            ProveResult::Contingent => write!(f, "Contingent"),
+            ProveResult::Falsified => write!(f, "Logically False"),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct Solver {
+pub struct Prover {
     root: RefCell<NodeIndex>,
 }
 
-impl Default for Solver {
+impl Default for Prover {
     fn default() -> Self {
         Self {
             root: RefCell::new(NodeIndex::end()),
@@ -81,11 +92,11 @@ impl Default for Solver {
     }
 }
 
-impl Solver {
+impl Prover {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The [solve] function tries do proof the given proposition by assuming the opposite
+    /// The [solve] function tries do prove the given proposition by assuming the opposite
     /// and then trying to find a contradiction. If a contradiction is found we have proven the
     /// logical truth of the proposition.
     ///
@@ -93,19 +104,19 @@ impl Solver {
     /// If the value is `SolveResult::Contradiction` then the proposition is L-TRUE.
     /// The return value in case of `Err` is detailed in [crate::errors::RaaError].
     ///
-    pub fn solve(&self, proposition: &Proposition) -> Result<SolveResult> {
-        let mut solve_result = self.try_proof(proposition, true)?;
-        if solve_result == SolveResult::Contingent {
-            solve_result = self.try_proof(proposition, false)?;
+    pub fn prove(&self, proposition: &Proposition) -> Result<ProveResult> {
+        let mut prove_result = self.try_prove(proposition, true)?;
+        if prove_result == ProveResult::Contingent {
+            prove_result = self.try_prove(proposition, false)?;
         }
-        Ok(solve_result)
+        Ok(prove_result)
     }
 
-    fn try_proof(&self, proposition: &Proposition, negated: bool) -> Result<SolveResult> {
-        let mut solve_result = SolveResult::Solving;
+    fn try_prove(&self, proposition: &Proposition, negated: bool) -> Result<ProveResult> {
+        let mut prove_result = ProveResult::Processing;
         let mut graph = PropositionTree::new();
         self.init_proposition_tree(proposition, &mut graph, negated)?;
-        while solve_result == SolveResult::Solving {
+        while prove_result == ProveResult::Processing {
             trace!(
                 "{}{:?}",
                 if negated { "neg " } else { "" },
@@ -116,7 +127,7 @@ impl Solver {
                     &|g, n| { format!("label = \"{} ({}, {})\"", g[n.0].0, n.0.index(), g[n.0].1) }
                 )
             );
-            solve_result = self.inner_solve(&mut graph, negated)?;
+            prove_result = self.inner_prove(&mut graph, negated)?;
         }
         trace!(
             "{}{:?}",
@@ -128,7 +139,7 @@ impl Solver {
                 &|g, n| { format!("label = \"{} ({}, {})\"", g[n.0].0, n.0.index(), g[n.0].1) }
             )
         );
-        Ok(solve_result)
+        Ok(prove_result)
     }
 
     // We insert a (possibly negated) variant of our proposition and try to refute it later.
@@ -302,11 +313,11 @@ impl Solver {
         })
     }
 
-    fn inner_solve(&self, graph: &mut PropositionTree, negated: bool) -> Result<SolveResult> {
+    fn inner_prove(&self, graph: &mut PropositionTree, negated: bool) -> Result<ProveResult> {
         let mut changed = false;
         if let Some(unprocessed_node) = self.find_unprocessed_node(graph) {
             let (to_add_left, to_add_right) = Self::transform(&graph[unprocessed_node].0)?;
-            let leafs_to_append = uncloses_leaf_nodes_of(graph, unprocessed_node);
+            let leafs_to_append = unclosed_leaf_nodes_of(graph, unprocessed_node);
             for leaf_node_id in leafs_to_append {
                 let mut last_parent_node = leaf_node_id;
                 for p in &to_add_left {
@@ -330,7 +341,7 @@ impl Solver {
         self.check_all_branches_closed(graph, changed, negated)
     }
 
-    fn update_branches_closed_state(&self, graph: &mut PropositionTree) -> Result<SolveResult> {
+    fn update_branches_closed_state(&self, graph: &mut PropositionTree) -> Result<ProveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let mut leaf_nodes_to_close = vec![];
         for leaf_node_id in leaf_node_ids {
@@ -357,7 +368,7 @@ impl Solver {
             let (_, transformation_state) = &mut graph[leaf_node_id];
             *transformation_state = TransformationState::Closed;
         }
-        Ok(SolveResult::Solving)
+        Ok(ProveResult::Processing)
     }
 
     fn check_all_branches_closed(
@@ -365,7 +376,7 @@ impl Solver {
         graph: &PropositionTree,
         changed: bool,
         negated: bool,
-    ) -> Result<SolveResult> {
+    ) -> Result<ProveResult> {
         let leaf_node_ids = leaf_nodes(graph);
         let all_closed = leaf_node_ids
             .iter()
@@ -373,17 +384,17 @@ impl Solver {
         if all_closed {
             // This means all branches contain contradictions!
             Ok(if negated {
-                // We used the negated proposition to refute it which indirectly proofed it's truth.
-                SolveResult::Proofed
+                // We used the negated proposition to refute it which indirectly proved it's truth.
+                ProveResult::Proven
             } else {
                 // We used the original proposition to refute it which directly falsified it.
-                SolveResult::Falsified
+                ProveResult::Falsified
             })
         } else if changed {
             // We need to continue until no branches can be developed anymore.
-            Ok(SolveResult::Solving)
+            Ok(ProveResult::Processing)
         } else {
-            Ok(SolveResult::Contingent)
+            Ok(ProveResult::Contingent)
         }
     }
 
@@ -429,7 +440,7 @@ fn leaf_nodes(graph: &PropositionTree) -> Vec<NodeIndex> {
         .collect::<Vec<NodeIndex>>()
 }
 
-fn uncloses_leaf_nodes_of(graph: &PropositionTree, start: NodeIndex) -> Vec<NodeIndex> {
+fn unclosed_leaf_nodes_of(graph: &PropositionTree, start: NodeIndex) -> Vec<NodeIndex> {
     let mut dfs = DfsPostOrder::new(graph, start);
     let mut result = Vec::new();
     while let Some(i) = dfs.next(graph) {
@@ -443,7 +454,7 @@ fn uncloses_leaf_nodes_of(graph: &PropositionTree, start: NodeIndex) -> Vec<Node
 #[cfg(test)]
 mod test {
 
-    use crate::solver::pairwise;
+    use crate::prover::pairwise;
 
     #[test]
     fn test_pairwise() {

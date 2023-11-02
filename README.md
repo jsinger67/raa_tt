@@ -16,6 +16,9 @@ that enables symbolic processing of the given propositional expression.
 Essentially, the negation of the proposition is assumed to be true, and then `raa_tt` tries to
 refute that negated proposition, which indirectly proves the original proposition.
 
+*For latest changes please see
+[CHANGELOG](https://github.com/jsinger67/raa_tt/blob/main/CHANGELOG.md)*
+
 ## How to use it?
 
 Clone this repository and switch to the repository's folder.
@@ -38,7 +41,7 @@ Yes! `raa_tt` is a library, too. You can reference it in your own crate.
 ## You want to explore the algorithm?
 To support this you can use the logging feature.
 
-Essentially set the `RUST_LOG` environment variable like in these example which use the powershell:
+Essentially set the `RUST_LOG` environment variable like in these examples which use the powershell:
 
 ```powershell
 $env:RUST_LOG="raa_tt=trace,raa_tt::raa_tt_grammar_trait=error"

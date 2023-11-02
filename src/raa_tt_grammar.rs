@@ -5,7 +5,6 @@ use std::fmt::{Debug, Display, Error, Formatter};
 
 ///
 /// Data structure that implements the semantic actions for our RaaTt grammar
-/// !Change this type as needed!
 ///
 #[derive(Debug, Default)]
 pub struct RaaTtGrammar<'t> {

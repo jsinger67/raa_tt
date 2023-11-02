@@ -31,8 +31,8 @@ impl Display for Proposition {
     }
 }
 
-impl From<&crate::raa_tt_grammar_trait::RaaTt<'_>> for Proposition {
-    fn from(value: &crate::raa_tt_grammar_trait::RaaTt<'_>) -> Self {
+impl From<&crate::raa_tt_grammar_trait::RaaTtList<'_>> for Proposition {
+    fn from(value: &crate::raa_tt_grammar_trait::RaaTtList<'_>) -> Self {
         (&*value.biconditional).into()
     }
 }
