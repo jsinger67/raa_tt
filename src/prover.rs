@@ -96,11 +96,11 @@ impl Prover {
     pub fn new() -> Self {
         Self::default()
     }
-    /// The [solve] function tries do prove the given proposition by assuming the opposite
-    /// and then trying to find a contradiction. If a contradiction is found we have proven the
-    /// logical truth of the proposition.
+    /// This function tries do prove the given proposition by assuming the opposite and then
+    /// trying to find a contradiction. If a contradiction is found we have proven the logical
+    /// truth of the proposition.
     ///
-    /// The return value of this function in case of `OK` is [crate::solver::SolveResult].
+    /// The return value of this function in case of `OK` is [crate::prover::ProveResult].
     /// If the value is `SolveResult::Contradiction` then the proposition is L-TRUE.
     /// The return value in case of `Err` is detailed in [crate::errors::RaaError].
     ///
