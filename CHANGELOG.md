@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.3.0 - 2023-11-05
+
+* Changed name of binary tool to `raa_tt`.
+* Hopefully fixed problem running `cargo doc` on doc.rs's readonly file system
+
 ## 0.2.0 - 2023-11-05
 
 * Grammar supports an arbitrary number of propositions.
