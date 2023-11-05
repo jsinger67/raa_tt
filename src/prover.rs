@@ -454,7 +454,12 @@ fn unclosed_leaf_nodes_of(graph: &PropositionTree, start: NodeIndex) -> Vec<Node
 #[cfg(test)]
 mod test {
 
-    use crate::prover::pairwise;
+    use crate::{
+        conjunction::Conjunction,
+        implication::Implication,
+        proposition::Proposition,
+        prover::{pairwise, ProveResult, Prover},
+    };
 
     #[test]
     fn test_pairwise() {
@@ -470,6 +475,26 @@ mod test {
                 (&'k', &'l')
             ],
             pairs
+        );
+    }
+
+    #[test]
+    fn test_solve() {
+        // Logically True - Modus Ponens
+        // p & (p -> q) -> q
+        let proposition = Proposition::Implication(Implication {
+            left: Box::new(Proposition::Conjunction(Conjunction {
+                left: Box::new("p".into()),
+                right: Box::new(Proposition::Implication(Implication {
+                    left: Box::new("p".into()),
+                    right: Box::new("q".into()),
+                })),
+            })),
+            right: Box::new("q".into()),
+        });
+        assert_eq!(
+            ProveResult::Proven,
+            Prover::new().prove(&proposition).unwrap()
         );
     }
 }
