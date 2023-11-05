@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * Add more examples to `test.txt`
 * Add integration tests
 * Improved naming and better English - hopefully 😉
+* Add generated files to source control to prevent warnings during packaging
 
 ## 0.1.0 - 2023-11-01
 
