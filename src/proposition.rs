@@ -31,6 +31,12 @@ impl Display for Proposition {
     }
 }
 
+impl From<&str> for Proposition {
+    fn from(value: &str) -> Self {
+        Proposition::Atom(value.to_owned())
+    }
+}
+
 impl From<&crate::raa_tt_grammar_trait::RaaTtList<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::RaaTtList<'_>) -> Self {
         (&*value.biconditional).into()
