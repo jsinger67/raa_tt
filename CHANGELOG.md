@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
-## 0.2.0 - Not released yet
+## 0.2.0 - 2023-11-05
 
 * Grammar supports an arbitrary number of propositions.
 * Add more examples to `test.txt`
