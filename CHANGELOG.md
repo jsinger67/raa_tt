@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.4.0 - Not released yet
+
+* The binary tool now supports direct input of expression as string.
+    ```shell
+    raa_tt -s "(a & a -> b) -> b" -q
+    ```
+* The binary tool now supports command line help by featuring `clap` command line parser.
+    ```shell
+    raa_tt -h
+    ```
+
 ## 0.3.0 - 2023-11-05
 
 * Changed name of binary tool to `raa_tt`.
