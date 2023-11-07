@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     ```shell
     raa_tt -h
     ```
+* The binary tool can now additionally generate truth tables. This is only for reference reasons
+since many available tools understand or generate truth tables. The limit for the number of
+variables for which a truth table can be generated is currently arbitrarily set to 16.
+    ```shell
+    raa_tt -s "(a & a -> b) -> b" -q -t
+    ```
 
 ## 0.3.0 - 2023-11-05
 

@@ -1,4 +1,7 @@
-use std::fmt::{Debug, Display, Error, Formatter};
+use std::{
+    collections::BTreeSet,
+    fmt::{Debug, Display, Error, Formatter},
+};
 
 use crate::{
     bi_implication::BiImplication, conjunction::Conjunction, disjunction::Disjunction,
@@ -15,6 +18,39 @@ pub enum Proposition {
     BiImplication(BiImplication),
     Disjunction(Disjunction),
     Conjunction(Conjunction),
+}
+impl Proposition {
+    pub(crate) fn get_variables(&self) -> BTreeSet<String> {
+        let mut vars = BTreeSet::new();
+        self.inner_get_variables(&mut vars);
+        vars
+    }
+
+    fn inner_get_variables(&self, vars: &mut BTreeSet<String>) {
+        match self {
+            Proposition::Void => (),
+            Proposition::Atom(v) => {
+                vars.insert(v.clone());
+            }
+            Proposition::Negation(Negation { inner }) => inner.inner_get_variables(vars),
+            Proposition::Implication(Implication { left, right }) => {
+                left.inner_get_variables(vars);
+                right.inner_get_variables(vars);
+            }
+            Proposition::BiImplication(BiImplication { left, right }) => {
+                left.inner_get_variables(vars);
+                right.inner_get_variables(vars);
+            }
+            Proposition::Disjunction(Disjunction { left, right }) => {
+                left.inner_get_variables(vars);
+                right.inner_get_variables(vars);
+            }
+            Proposition::Conjunction(Conjunction { left, right }) => {
+                left.inner_get_variables(vars);
+                right.inner_get_variables(vars);
+            }
+        }
+    }
 }
 
 impl Display for Proposition {

@@ -7,14 +7,18 @@ use clap::Parser;
 #[command(author, version, about)]
 pub(crate) struct CliArgs {
     /// Input file
-    #[arg(short = 'f', long = "file", group = "input", required = true)]
+    #[arg(short, long, group = "input", required = true)]
     pub file: Option<PathBuf>,
 
     /// Input string
     #[arg(short = 's', group = "input", required = true)]
     pub text: Option<String>,
 
-    /// Decreased verbosity
+    /// Generate truth table
+    #[arg(short, long)]
+    pub truth_table: bool,
+
+    /// Decrease verbosity
     #[arg(short, long)]
     pub quiet: bool,
 }

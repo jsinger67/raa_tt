@@ -5,10 +5,10 @@ mod arguments;
 use anyhow::{Context, Result};
 use clap::Parser;
 use parol_runtime::{log::debug, Report};
-use raa_tt::proposition::Proposition;
 use raa_tt::prover::Prover;
 use raa_tt::raa_tt_grammar::RaaTtGrammar;
 use raa_tt::raa_tt_parser::parse;
+use raa_tt::{proposition::Proposition, table_generator::TableGenerator};
 use std::{fs, time::Instant};
 
 use crate::arguments::CliArgs;
@@ -43,22 +43,29 @@ fn main() -> Result<()> {
         Ok(_) => {
             let elapsed_time = now.elapsed();
             if !quiet {
+                println!("{}", "-".repeat(80));
                 println!("Parsing took {} milliseconds.", elapsed_time.as_millis());
+                println!();
             }
             for p in &raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list {
                 let proposition: Proposition = (&*p.biconditional).into();
                 if !quiet {
-                    println!("Parsed expression: {proposition}");
+                    println!("{}", "-".repeat(80));
                 }
 
                 let solver = Prover::new();
                 let solve_result = solver.prove(&proposition);
                 match solve_result {
                     Ok(r) => {
-                        println!("// {r}");
-                        println!("{proposition}\n");
+                        println!();
+                        println!("{proposition} is {r}");
                     }
                     Err(e) => println!("Error occurred: {e}"),
+                }
+
+                if args.truth_table {
+                    let table_generator = TableGenerator::new();
+                    table_generator.generate_truth_table(&proposition)?;
                 }
             }
             Ok(())
