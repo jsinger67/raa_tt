@@ -10,3 +10,4 @@ pub mod raa_tt_grammar;
 mod raa_tt_grammar_trait;
 pub mod raa_tt_parser;
 pub mod table_generator;
+pub mod truth_table;

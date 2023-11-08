@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::BTreeMap, fmt::Write};
+use std::{cell::RefCell, collections::BTreeMap};
 
 use crate::{
     bi_implication::BiImplication,
@@ -8,6 +8,7 @@ use crate::{
     implication::Implication,
     negation::Negation,
     proposition::Proposition,
+    truth_table::TruthTable,
 };
 
 impl Proposition {
@@ -38,6 +39,7 @@ impl Proposition {
 
 #[derive(Debug, Default)]
 pub struct TableGenerator {
+    // Variable set paired with values that change in every line
     vars: RefCell<BTreeMap<String, bool>>,
 }
 
@@ -46,7 +48,7 @@ impl TableGenerator {
         Self::default()
     }
 
-    pub fn generate_truth_table(&self, proposition: &Proposition) -> Result<()> {
+    pub fn generate_truth_table(&self, proposition: &Proposition) -> Result<TruthTable> {
         let vars = proposition.get_variables();
         *self.vars.borrow_mut() = vars.iter().fold(BTreeMap::new(), |mut acc, v| {
             acc.insert(v.clone(), false);
@@ -55,22 +57,28 @@ impl TableGenerator {
         if self.number_of_vars() > 16 {
             return Err(RaaError::TooManyVariables);
         }
-        let var_part = self.generate_table_header()?;
-        let prp_part = proposition.to_string();
-        println!("{var_part} {prp_part}");
-        println!("{}", "-".repeat(var_part.len() + prp_part.len()));
-        for v in 0..2usize.pow(self.number_of_vars()) {
-            self.generate_table_line(v, proposition)?;
-        }
-        Ok(())
+        let header = self.generate_table_header(proposition);
+        let line_count = 2usize.pow(self.number_of_vars());
+        let lines = Vec::with_capacity(line_count);
+        let lines = (0..line_count).try_fold(lines, |mut lines, v| {
+            self.generate_table_line(v, proposition).map(|line| {
+                lines.push(line);
+                lines
+            })
+        })?;
+        Ok(TruthTable { header, lines })
     }
 
-    fn generate_table_header(&self) -> Result<String> {
-        let mut line = String::new();
-        self.vars.borrow().keys().try_for_each(|var| {
-            write!(line, "{var} | ").map_err(|e| RaaError::FormatError { source: e })
-        })?;
-        Ok(line)
+    fn generate_table_header(&self, proposition: &Proposition) -> Vec<String> {
+        let mut header = self.vars.borrow().keys().fold(
+            Vec::with_capacity(self.vars.borrow().len() + 1),
+            |mut acc, var| {
+                acc.push(var.clone());
+                acc
+            },
+        );
+        header.push(proposition.to_string());
+        header
     }
 
     #[inline]
@@ -78,21 +86,24 @@ impl TableGenerator {
         self.vars.borrow().len() as u32
     }
 
-    fn generate_table_line(&self, v: usize, proposition: &Proposition) -> Result<()> {
+    fn generate_table_line(&self, v: usize, proposition: &Proposition) -> Result<Vec<bool>> {
         let n = self.number_of_vars();
         let mut bit = if n == 0 { 0 } else { 1 << (n - 1) };
-        self.vars.borrow_mut().iter_mut().for_each(|(var, val)| {
-            // Extract the variable value from the bits of number v which is increased for each line
-            let b = v & bit != 0;
-            *val = b;
-            let t = if b { "T" } else { "F" };
-            print!("{t:w$} | ", w = var.len());
-            bit >>= 1;
-        });
+        let mut line =
+            self.vars
+                .borrow_mut()
+                .iter_mut()
+                .fold(Vec::new(), |mut acc, (_var, val)| {
+                    // Extract the variable value from the bits of number v which is increased for
+                    // each line outside.
+                    let b = v & bit != 0;
+                    *val = b;
+                    acc.push(b);
+                    bit >>= 1;
+                    acc
+                });
         let b = proposition.calculate_value(&self.vars.borrow())?;
-        let t = if b { "T" } else { "F" };
-        print!(" {t}");
-        println!();
-        Ok(())
+        line.push(b);
+        Ok(line)
     }
 }

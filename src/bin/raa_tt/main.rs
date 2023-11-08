@@ -65,7 +65,8 @@ fn main() -> Result<()> {
 
                 if args.truth_table {
                     let table_generator = TableGenerator::new();
-                    table_generator.generate_truth_table(&proposition)?;
+                    let truth_table = table_generator.generate_truth_table(&proposition)?;
+                    println!("{}", truth_table);
                 }
             }
             Ok(())
