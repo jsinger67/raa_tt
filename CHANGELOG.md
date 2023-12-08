@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
-## 0.4.0 - Not released yet
+## 0.4.0 - 2023-11-09
 
 * The binary tool now supports direct input of expression as string.
     ```shell
