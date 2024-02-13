@@ -48,7 +48,7 @@ fn main() -> Result<()> {
                 println!();
             }
             for p in &raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list {
-                let proposition: Proposition = (&*p.biconditional).into();
+                let proposition: Proposition = (&p.biconditional).into();
                 if !quiet {
                     println!("{}", "-".repeat(80));
                 }

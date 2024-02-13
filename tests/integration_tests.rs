@@ -68,7 +68,7 @@ fn compile_and_prove() -> Result<()> {
         parse(p, &file_name, &mut raa_tt_grammar)?;
         assert_eq!(1, raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list.len());
         let proposition: Proposition =
-            (&*raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list[0].biconditional).into();
+            (&raa_tt_grammar.raa_tt.as_ref().unwrap().raa_tt_list[0].biconditional).into();
         let solver = Prover::new();
         let solve_result = solver.prove(&proposition)?;
         assert_eq!(*r, solve_result);

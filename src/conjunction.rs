@@ -2,6 +2,7 @@ use crate::proposition::Proposition;
 use std::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// Conjunction struct represents a binary logical conjunction operation.
 pub struct Conjunction {
     pub left: Box<Proposition>,
     pub right: Box<Proposition>,

@@ -1,15 +1,16 @@
 {
-    "cSpell.words": [
-        "Biconditional",
-        "biimplication",
-        "clsd",
-        "Cond",
-        "Dreierschluss",
-        "IVEQ",
-        "petgraph",
-        "Ponens",
-        "repr",
-        "syntree",
-        "Tollens"
-    ]
+  "cSpell.words": [
+    "Biconditional",
+    "biimplication",
+    "clsd",
+    "Cond",
+    "Dreierschluss",
+    "IVEQ",
+    "petgraph",
+    "Ponens",
+    "repr",
+    "syntree",
+    "termcolor",
+    "Tollens"
+  ]
 }

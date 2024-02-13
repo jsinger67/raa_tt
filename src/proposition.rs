@@ -75,7 +75,7 @@ impl From<&str> for Proposition {
 
 impl From<&crate::raa_tt_grammar_trait::RaaTtList<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::RaaTtList<'_>) -> Self {
-        (&*value.biconditional).into()
+        (&value.biconditional).into()
     }
 }
 
@@ -86,14 +86,14 @@ impl From<&crate::raa_tt_grammar_trait::Biconditional<'_>> for Proposition {
             ref biconditional_list,
         } = value;
         if biconditional_list.is_empty() {
-            (&**conditional).into()
+            conditional.into()
         } else {
             biconditional_list
                 .iter()
-                .fold((&**conditional).into(), |left: Proposition, b| {
+                .fold(conditional.into(), |left: Proposition, b| {
                     Proposition::BiImplication(BiImplication {
                         left: Box::new(left),
-                        right: Box::new((&*b.conditional).into()),
+                        right: Box::new((&b.conditional).into()),
                     })
                 })
         }
@@ -107,14 +107,14 @@ impl From<&crate::raa_tt_grammar_trait::Conditional<'_>> for Proposition {
             ref conditional_list,
         } = value;
         if conditional_list.is_empty() {
-            (&**disjunction).into()
+            disjunction.into()
         } else {
             conditional_list
                 .iter()
-                .fold((&**disjunction).into(), |left: Proposition, b| {
+                .fold(disjunction.into(), |left: Proposition, b| {
                     Proposition::Implication(Implication {
                         left: Box::new(left),
-                        right: Box::new((&*b.disjunction).into()),
+                        right: Box::new((&b.disjunction).into()),
                     })
                 })
         }
@@ -128,14 +128,14 @@ impl From<&crate::raa_tt_grammar_trait::Disjunction<'_>> for Proposition {
             ref disjunction_list,
         } = value;
         if disjunction_list.is_empty() {
-            (&**conjunction).into()
+            conjunction.into()
         } else {
             disjunction_list
                 .iter()
-                .fold((&**conjunction).into(), |left: Proposition, b| {
+                .fold(conjunction.into(), |left: Proposition, b| {
                     Proposition::Disjunction(Disjunction {
                         left: Box::new(left),
-                        right: Box::new((&*b.conjunction).into()),
+                        right: Box::new((&b.conjunction).into()),
                     })
                 })
         }
@@ -149,14 +149,14 @@ impl From<&crate::raa_tt_grammar_trait::Conjunction<'_>> for Proposition {
             ref conjunction_list,
         } = value;
         if conjunction_list.is_empty() {
-            (&**factor).into()
+            factor.into()
         } else {
             conjunction_list
                 .iter()
-                .fold((&**factor).into(), |left: Proposition, b| {
+                .fold(factor.into(), |left: Proposition, b| {
                     Proposition::Conjunction(Conjunction {
                         left: Box::new(left),
-                        right: Box::new((&*b.factor).into()),
+                        right: Box::new((&b.factor).into()),
                     })
                 })
         }
@@ -170,7 +170,7 @@ impl From<&crate::raa_tt_grammar_trait::Factor<'_>> for Proposition {
                 var,
             }) => Proposition::Atom(var.var.text().to_owned()),
             crate::raa_tt_grammar_trait::Factor::Negation(f) => Proposition::Negation(Negation {
-                inner: Box::new((&*f.negation.factor).into()),
+                inner: Box::new((&f.negation.factor).into()),
             }),
             crate::raa_tt_grammar_trait::Factor::LParBiconditionalRPar(b) => {
                 (&*b.biconditional).into()

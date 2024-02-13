@@ -22,6 +22,7 @@ fn main() {
         .parser_output_file("raa_tt_parser.rs")
         .actions_output_file("raa_tt_grammar_trait.rs")
         .enable_auto_generation()
+        .minimize_boxed_types()
         .user_type_name("RaaTtGrammar")
         .user_trait_module_name("raa_tt_grammar")
         .trim_parse_tree()

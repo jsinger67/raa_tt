@@ -2,6 +2,7 @@ use crate::proposition::Proposition;
 use std::fmt::{Debug, Display, Error, Formatter};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// The disjunction structure represents a binary logical disjunction operation.
 pub struct Disjunction {
     pub left: Box<Proposition>,
     pub right: Box<Proposition>,

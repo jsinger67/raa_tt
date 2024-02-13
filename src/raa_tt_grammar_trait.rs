@@ -113,7 +113,7 @@ pub trait RaaTtGrammarTrait<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct FactorVar<'t> {
-    pub var: Box<Var<'t>>,
+    pub var: Var<'t>,
 }
 
 ///
@@ -172,7 +172,7 @@ pub struct BiCond<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct Biconditional<'t> {
-    pub conditional: Box<Conditional<'t>>,
+    pub conditional: Conditional<'t>,
     pub biconditional_list: Vec<BiconditionalList<'t>>,
 }
 
@@ -183,7 +183,7 @@ pub struct Biconditional<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct BiconditionalList<'t> {
-    pub conditional: Box<Conditional<'t>>,
+    pub conditional: Conditional<'t>,
 }
 
 ///
@@ -203,7 +203,7 @@ pub struct Cond<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct Conditional<'t> {
-    pub disjunction: Box<Disjunction<'t>>,
+    pub disjunction: Disjunction<'t>,
     pub conditional_list: Vec<ConditionalList<'t>>,
 }
 
@@ -214,7 +214,7 @@ pub struct Conditional<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct ConditionalList<'t> {
-    pub disjunction: Box<Disjunction<'t>>,
+    pub disjunction: Disjunction<'t>,
 }
 
 ///
@@ -224,7 +224,7 @@ pub struct ConditionalList<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct Conjunction<'t> {
-    pub factor: Box<Factor<'t>>,
+    pub factor: Factor<'t>,
     pub conjunction_list: Vec<ConjunctionList<'t>>,
 }
 
@@ -235,7 +235,7 @@ pub struct Conjunction<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct ConjunctionList<'t> {
-    pub factor: Box<Factor<'t>>,
+    pub factor: Factor<'t>,
 }
 
 ///
@@ -245,7 +245,7 @@ pub struct ConjunctionList<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct Disjunction<'t> {
-    pub conjunction: Box<Conjunction<'t>>,
+    pub conjunction: Conjunction<'t>,
     pub disjunction_list: Vec<DisjunctionList<'t>>,
 }
 
@@ -256,7 +256,7 @@ pub struct Disjunction<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct DisjunctionList<'t> {
-    pub conjunction: Box<Conjunction<'t>>,
+    pub conjunction: Conjunction<'t>,
 }
 
 ///
@@ -287,7 +287,7 @@ pub struct LPar<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct Negation<'t> {
-    pub factor: Box<Factor<'t>>,
+    pub factor: Factor<'t>,
 }
 
 ///
@@ -337,7 +337,7 @@ pub struct RaaTt<'t> {
 #[derive(Builder, Debug, Clone)]
 #[builder(crate = "parol_runtime::derive_builder")]
 pub struct RaaTtList<'t> {
-    pub biconditional: Box<Biconditional<'t>>,
+    pub biconditional: Biconditional<'t>,
 }
 
 ///
@@ -597,9 +597,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         trace!("{}", self.trace_item_stack(context));
         let mut raa_tt_list = pop_item!(self, raa_tt_list, RaaTtList, context);
         let biconditional = pop_item!(self, biconditional, Biconditional, context);
-        let raa_tt_list_0_built = RaaTtList {
-            biconditional: Box::new(biconditional),
-        };
+        let raa_tt_list_0_built = RaaTtList { biconditional };
         // Add an element to the vector
         raa_tt_list.push(raa_tt_list_0_built);
         self.push(ASTType::RaaTtList(raa_tt_list), context);
@@ -635,7 +633,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
             pop_and_reverse_item!(self, biconditional_list, BiconditionalList, context);
         let conditional = pop_item!(self, conditional, Conditional, context);
         let biconditional_built = Biconditional {
-            conditional: Box::new(conditional),
+            conditional,
             biconditional_list,
         };
         // Calling user action here
@@ -660,12 +658,8 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         let mut biconditional_list =
             pop_item!(self, biconditional_list, BiconditionalList, context);
         let conditional = pop_item!(self, conditional, Conditional, context);
-        // Ignore clipped member 'bi_cond'
         self.pop(context);
-        let biconditional_list_0_built = BiconditionalList {
-            conditional: Box::new(conditional),
-            // Ignore clipped member 'bi_cond'
-        };
+        let biconditional_list_0_built = BiconditionalList { conditional };
         // Add an element to the vector
         biconditional_list.push(biconditional_list_0_built);
         self.push(ASTType::BiconditionalList(biconditional_list), context);
@@ -704,7 +698,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
             pop_and_reverse_item!(self, conditional_list, ConditionalList, context);
         let disjunction = pop_item!(self, disjunction, Disjunction, context);
         let conditional_built = Conditional {
-            disjunction: Box::new(disjunction),
+            disjunction,
             conditional_list,
         };
         // Calling user action here
@@ -728,12 +722,8 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         trace!("{}", self.trace_item_stack(context));
         let mut conditional_list = pop_item!(self, conditional_list, ConditionalList, context);
         let disjunction = pop_item!(self, disjunction, Disjunction, context);
-        // Ignore clipped member 'cond'
         self.pop(context);
-        let conditional_list_0_built = ConditionalList {
-            disjunction: Box::new(disjunction),
-            // Ignore clipped member 'cond'
-        };
+        let conditional_list_0_built = ConditionalList { disjunction };
         // Add an element to the vector
         conditional_list.push(conditional_list_0_built);
         self.push(ASTType::ConditionalList(conditional_list), context);
@@ -769,7 +759,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
             pop_and_reverse_item!(self, disjunction_list, DisjunctionList, context);
         let conjunction = pop_item!(self, conjunction, Conjunction, context);
         let disjunction_built = Disjunction {
-            conjunction: Box::new(conjunction),
+            conjunction,
             disjunction_list,
         };
         // Calling user action here
@@ -793,12 +783,8 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         trace!("{}", self.trace_item_stack(context));
         let mut disjunction_list = pop_item!(self, disjunction_list, DisjunctionList, context);
         let conjunction = pop_item!(self, conjunction, Conjunction, context);
-        // Ignore clipped member 'or'
         self.pop(context);
-        let disjunction_list_0_built = DisjunctionList {
-            conjunction: Box::new(conjunction),
-            // Ignore clipped member 'or'
-        };
+        let disjunction_list_0_built = DisjunctionList { conjunction };
         // Add an element to the vector
         disjunction_list.push(disjunction_list_0_built);
         self.push(ASTType::DisjunctionList(disjunction_list), context);
@@ -834,7 +820,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
             pop_and_reverse_item!(self, conjunction_list, ConjunctionList, context);
         let factor = pop_item!(self, factor, Factor, context);
         let conjunction_built = Conjunction {
-            factor: Box::new(factor),
+            factor,
             conjunction_list,
         };
         // Calling user action here
@@ -858,12 +844,8 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         trace!("{}", self.trace_item_stack(context));
         let mut conjunction_list = pop_item!(self, conjunction_list, ConjunctionList, context);
         let factor = pop_item!(self, factor, Factor, context);
-        // Ignore clipped member 'and'
         self.pop(context);
-        let conjunction_list_0_built = ConjunctionList {
-            factor: Box::new(factor),
-            // Ignore clipped member 'and'
-        };
+        let conjunction_list_0_built = ConjunctionList { factor };
         // Add an element to the vector
         conjunction_list.push(conjunction_list_0_built);
         self.push(ASTType::ConjunctionList(conjunction_list), context);
@@ -892,12 +874,8 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         let context = function_name!();
         trace!("{}", self.trace_item_stack(context));
         let factor = pop_item!(self, factor, Factor, context);
-        // Ignore clipped member 'not'
         self.pop(context);
-        let negation_built = Negation {
-            // Ignore clipped member 'not'
-            factor: Box::new(factor),
-        };
+        let negation_built = Negation { factor };
         // Calling user action here
         self.user_grammar.negation(&negation_built)?;
         self.push(ASTType::Negation(negation_built), context);
@@ -913,7 +891,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
         let context = function_name!();
         trace!("{}", self.trace_item_stack(context));
         let var = pop_item!(self, var, Var, context);
-        let factor_0_built = FactorVar { var: Box::new(var) };
+        let factor_0_built = FactorVar { var };
         let factor_0_built = Factor::Var(factor_0_built);
         // Calling user action here
         self.user_grammar.factor(&factor_0_built)?;
@@ -953,15 +931,11 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
     ) -> Result<()> {
         let context = function_name!();
         trace!("{}", self.trace_item_stack(context));
-        // Ignore clipped member 'r_par'
         self.pop(context);
         let biconditional = pop_item!(self, biconditional, Biconditional, context);
-        // Ignore clipped member 'l_par'
         self.pop(context);
         let factor_2_built = FactorLParBiconditionalRPar {
-            // Ignore clipped member 'l_par'
             biconditional: Box::new(biconditional),
-            // Ignore clipped member 'r_par'
         };
         let factor_2_built = Factor::LParBiconditionalRPar(factor_2_built);
         // Calling user action here

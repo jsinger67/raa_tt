@@ -2,6 +2,7 @@ use crate::proposition::Proposition;
 use std::fmt::{Display, Error, Formatter};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// Negation struct represents an unary logical negation operation.
 pub struct Negation {
     pub inner: Box<Proposition>,
 }
