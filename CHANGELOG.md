@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.5.0 - 2024-09-19
+
+* Upgrade to parol 1.0
+* Fix new clippy warning
+
 ## 0.4.0 - 2023-11-09
 
 * The binary tool now supports direct input of expression as string.
@@ -19,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     ```
 * The binary tool can now additionally generate truth tables. This is only for reference reasons
 since many available tools understand or generate truth tables. The limit for the number of
-variables for which a truth table can be generated is currently arbitrarily set to 16.
+variables for which a truth table can be generated is currently deliberately set to 16.
     ```shell
     raa_tt -s "(a & a -> b) -> b" -q -t
     ```
