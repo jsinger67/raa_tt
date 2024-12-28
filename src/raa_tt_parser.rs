@@ -18,21 +18,21 @@ use parol_runtime::lexer::tokenizer::{
     ERROR_TOKEN, NEW_LINE_TOKEN, UNMATCHABLE_TOKEN, WHITESPACE_TOKEN,
 };
 
-pub const TERMINALS: &[&str; 14] = &[
-    /*  0 */ UNMATCHABLE_TOKEN,
-    /*  1 */ UNMATCHABLE_TOKEN,
-    /*  2 */ UNMATCHABLE_TOKEN,
-    /*  3 */ UNMATCHABLE_TOKEN,
-    /*  4 */ UNMATCHABLE_TOKEN,
-    /*  5 */ r"!",
-    /*  6 */ r"\&",
-    /*  7 */ r"\|",
-    /*  8 */ r"\->",
-    /*  9 */ r"<\->",
-    /* 10 */ r"\(",
-    /* 11 */ r"\)",
-    /* 12 */ r"[a-z][_a-zA-Z0-9]*",
-    /* 13 */ ERROR_TOKEN,
+pub const TERMINALS: &[(&str, Option<(bool, &str)>); 14] = &[
+    /*  0 */ (UNMATCHABLE_TOKEN, None),
+    /*  1 */ (UNMATCHABLE_TOKEN, None),
+    /*  2 */ (UNMATCHABLE_TOKEN, None),
+    /*  3 */ (UNMATCHABLE_TOKEN, None),
+    /*  4 */ (UNMATCHABLE_TOKEN, None),
+    /*  5 */ (r"!", None),
+    /*  6 */ (r"\&", None),
+    /*  7 */ (r"\|", None),
+    /*  8 */ (r"\->", None),
+    /*  9 */ (r"<\->", None),
+    /* 10 */ (r"\(", None),
+    /* 11 */ (r"\)", None),
+    /* 12 */ (r"[a-z][_a-zA-Z0-9]*", None),
+    /* 13 */ (ERROR_TOKEN, None),
 ];
 
 pub const TERMINAL_NAMES: &[&str; 14] = &[
@@ -58,7 +58,7 @@ const SCANNER_0: (&[&str; 5], &[TerminalIndex; 8]) = (
         /*  0 */ UNMATCHABLE_TOKEN,
         /*  1 */ NEW_LINE_TOKEN,
         /*  2 */ WHITESPACE_TOKEN,
-        /*  3 */ r"(//.*(\r\n|\r|\n|$))",
+        /*  3 */ r"//.*(\r\n|\r|\n)?",
         /*  4 */ UNMATCHABLE_TOKEN,
     ],
     &[
@@ -410,7 +410,7 @@ pub fn parse<'t, T>(
     input: &'t str,
     file_name: T,
     user_actions: &mut RaaTtGrammar<'t>,
-) -> Result<ParseTree<'t>, ParolError>
+) -> Result<ParseTree, ParolError>
 where
     T: AsRef<Path>,
 {

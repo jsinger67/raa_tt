@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.6.0 - 2024-12-28
+
+* Upgrade to parol 2.0
+
 ## 0.5.0 - 2024-09-19
 
 * Upgrade to parol 1.0
