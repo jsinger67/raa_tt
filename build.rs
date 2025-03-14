@@ -1,7 +1,6 @@
 use std::{fs, path::PathBuf, process};
 
-use parol::{build::Builder, ParolErrorReporter};
-use parol_runtime::Report;
+use parol::{build::Builder, parol_runtime::Report, ParolErrorReporter};
 
 fn main() {
     let par_file = PathBuf::from("raa_tt.par");
