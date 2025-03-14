@@ -422,6 +422,7 @@ where
         NON_TERMINALS,
     );
     llk_parser.trim_parse_tree();
+    llk_parser.disable_recovery();
 
     // Initialize wrapper
     let mut user_actions = RaaTtGrammarAuto::new(user_actions);
