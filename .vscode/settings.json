@@ -10,6 +10,7 @@
     "petgraph",
     "Ponens",
     "repr",
+    "satisfiability",
     "scnr",
     "syntree",
     "termcolor",
