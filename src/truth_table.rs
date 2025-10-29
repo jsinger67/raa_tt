@@ -21,7 +21,13 @@ impl Display for TruthTable {
             self.header.iter().enumerate().try_for_each(|(i, var)| {
                 let b = line[i];
                 let t = if b { "T" } else { "F" };
-                write!(f, "{t:w$} | ", w = var.len())
+                if i == self.header.len() - 1 {
+                    // Right-align the last column (expression result)
+                    write!(f, "{t:>w$} | ", w = var.len())
+                } else {
+                    // Left-align all other columns
+                    write!(f, "{t:w$} | ", w = var.len())
+                }
             })?;
             writeln!(f)
         })
