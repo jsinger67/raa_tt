@@ -19,7 +19,7 @@
 //! cargo bench --bench prover_benchmarks -- prove_result_variants
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use raa_tt::{
     bi_implication::BiImplication,
     conjunction::Conjunction,
@@ -386,7 +386,7 @@ fn bench_prove_result_variants(c: &mut Criterion) {
 /// Benchmark prover creation overhead
 fn bench_prover_creation(c: &mut Criterion) {
     c.bench_function("prover_creation", |b| {
-        b.iter(|| Prover::new());
+        b.iter(Prover::new);
     });
 }
 

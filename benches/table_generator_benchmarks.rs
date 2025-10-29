@@ -19,7 +19,7 @@
 //! cargo bench --bench table_generator_benchmarks -- memory_usage
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use raa_tt::{
     bi_implication::BiImplication, conjunction::Conjunction, disjunction::Disjunction,
     implication::Implication, negation::Negation, proposition::Proposition,
@@ -75,6 +75,7 @@ fn create_disjunction_chain(count: usize) -> Proposition {
 
 /// Create an implication chain with exactly `count` variables
 /// Creates: var0 -> (var1 -> (var2 -> ... -> var(count-1)))
+#[allow(dead_code)]
 fn create_implication_chain(count: usize) -> Proposition {
     if count == 0 {
         return Proposition::Atom("var0".to_string());
@@ -356,7 +357,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 /// Benchmark table generator creation overhead
 fn bench_generator_creation(c: &mut Criterion) {
     c.bench_function("table_generator_creation", |b| {
-        b.iter(|| TableGenerator::new());
+        b.iter(TableGenerator::new);
     });
 }
 
