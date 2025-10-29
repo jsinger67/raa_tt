@@ -1,23 +1,43 @@
-use std::process;
+use std::{env, fs, path::PathBuf, process};
 
-use parol::{build::Builder, parol_runtime::Report, ParolErrorReporter};
+use parol::{ParolErrorReporter, build::Builder, parol_runtime::Report};
 
 fn main() {
-    // CLI equivalent is:
-    // parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar -b --disable-recovery
-    if let Err(err) = Builder::with_explicit_output_dir("src")
-        .grammar_file("raa_tt.par")
-        .expanded_grammar_output_file("../raa_tt-exp.par")
-        .parser_output_file("raa_tt_parser.rs")
-        .actions_output_file("raa_tt_grammar_trait.rs")
-        .minimize_boxed_types()
-        .user_type_name("RaaTtGrammar")
-        .user_trait_module_name("raa_tt_grammar")
-        .trim_parse_tree()
-        .disable_recovery()
-        .generate_parser()
+    // Skip in GitHub Actions
+    if let Ok(in_actions) = env::var("GITHUB_ACTIONS")
+        && in_actions == "true"
     {
-        ParolErrorReporter::report_error(&err, "raa_tt.par").unwrap_or_default();
-        process::exit(1);
+        return;
+    }
+
+    let generate_parser = {
+        let par_file = PathBuf::from("raa_tt.par");
+        let exp_file = PathBuf::from("raa_tt-exp.par");
+
+        let par_modified = fs::metadata(par_file).unwrap().modified().unwrap();
+        let exp_modified = fs::metadata(exp_file).unwrap().modified().unwrap();
+
+        par_modified > exp_modified
+    };
+
+    if generate_parser {
+        println!("cargo:warning=raa_tt.par was changed");
+        // CLI equivalent is:
+        // parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar --trim --disable-recovery --minbox
+        if let Err(err) = Builder::with_explicit_output_dir("src")
+            .grammar_file("raa_tt.par")
+            .expanded_grammar_output_file("../raa_tt-exp.par")
+            .parser_output_file("raa_tt_parser.rs")
+            .actions_output_file("raa_tt_grammar_trait.rs")
+            .minimize_boxed_types()
+            .user_type_name("RaaTtGrammar")
+            .user_trait_module_name("raa_tt_grammar")
+            .trim_parse_tree()
+            .disable_recovery()
+            .generate_parser()
+        {
+            ParolErrorReporter::report_error(&err, "raa_tt.par").unwrap_or_default();
+            process::exit(1);
+        }
     }
 }
