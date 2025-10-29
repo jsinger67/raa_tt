@@ -1,6 +1,6 @@
 [package]
 name = "raa_tt"
-version = "0.7.0"
+version = "0.8.0"
 categories = ["science", "mathematics", "parser-implementations"]
 description = "Proves sentences of propositional calculus"
 documentation = "https://docs.rs/raa_tt"
@@ -15,12 +15,13 @@ license = "MIT OR Apache-2.0"
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive", "cargo"] }
 env_logger = "0.11"
-parol_runtime = "3.0.0"
-petgraph = "0.6"
+parol_runtime = "4.0"
+petgraph = "0.8"
+scnr2 = "0.3.3"
 thiserror = "2.0"
 
 [build-dependencies]
-parol = "3.0.1"
+parol = "4.1"
 
 # For faster builds.
 [profile.dev.build-override]

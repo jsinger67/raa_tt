@@ -14,7 +14,7 @@ use std::{fs, time::Instant};
 use crate::arguments::CliArgs;
 
 // To generate on command line:
-// parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar -g
+// parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar --trim --disable-recovery --minbox
 
 struct ErrorReporter;
 impl Report for ErrorReporter {}

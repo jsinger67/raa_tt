@@ -6,9 +6,11 @@
     "Cond",
     "Dreierschluss",
     "IVEQ",
+    "minbox",
     "petgraph",
     "Ponens",
     "repr",
+    "scnr",
     "syntree",
     "termcolor",
     "Tollens"

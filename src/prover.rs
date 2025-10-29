@@ -399,8 +399,14 @@ impl Prover {
     }
 
     fn ancestors(&self, graph: &PropositionTree, node_id: NodeIndex) -> Vec<NodeIndex> {
-        let paths = all_simple_paths::<Vec<_>, _>(graph, *self.root.borrow(), node_id, 0, None)
-            .collect::<Vec<_>>();
+        let paths = all_simple_paths::<Vec<_>, _, std::hash::RandomState>(
+            graph,
+            *self.root.borrow(),
+            node_id,
+            0,
+            None,
+        )
+        .collect::<Vec<_>>();
         // Tree constraint:
         // At most one path should exist from root to this end node.
         debug_assert!(paths.len() < 2, "length was {}", paths.len());

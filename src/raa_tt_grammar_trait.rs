@@ -9,7 +9,6 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::upper_case_acronyms)]
 
-use parol_runtime::derive_builder::Builder;
 use parol_runtime::log::trace;
 #[allow(unused_imports)]
 use parol_runtime::parol_macros::{pop_and_reverse_item, pop_item};
@@ -110,8 +109,7 @@ pub trait RaaTtGrammarTrait<'t> {
 /// `Factor: Var;`
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct FactorVar<'t> {
     pub var: Var<'t>,
 }
@@ -122,8 +120,7 @@ pub struct FactorVar<'t> {
 /// `Factor: Negation;`
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct FactorNegation<'t> {
     pub negation: Box<Negation<'t>>,
 }
@@ -134,8 +131,7 @@ pub struct FactorNegation<'t> {
 /// `Factor: LPar^ /* Clipped */ Biconditional RPar^ /* Clipped */;`
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct FactorLParBiconditionalRPar<'t> {
     pub biconditional: Box<Biconditional<'t>>,
 }
@@ -149,8 +145,7 @@ pub struct FactorLParBiconditionalRPar<'t> {
 /// Type derived for non-terminal And
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct And<'t> {
     pub and: Token<'t>, /* & */
 }
@@ -159,8 +154,7 @@ pub struct And<'t> {
 /// Type derived for non-terminal BiCond
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct BiCond<'t> {
     pub bi_cond: Token<'t>, /* <-> */
 }
@@ -169,8 +163,7 @@ pub struct BiCond<'t> {
 /// Type derived for non-terminal Biconditional
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Biconditional<'t> {
     pub conditional: Conditional<'t>,
     pub biconditional_list: Vec<BiconditionalList<'t>>,
@@ -180,8 +173,7 @@ pub struct Biconditional<'t> {
 /// Type derived for non-terminal BiconditionalList
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct BiconditionalList<'t> {
     pub conditional: Conditional<'t>,
 }
@@ -190,8 +182,7 @@ pub struct BiconditionalList<'t> {
 /// Type derived for non-terminal Cond
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Cond<'t> {
     pub cond: Token<'t>, /* -> */
 }
@@ -200,8 +191,7 @@ pub struct Cond<'t> {
 /// Type derived for non-terminal Conditional
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Conditional<'t> {
     pub disjunction: Disjunction<'t>,
     pub conditional_list: Vec<ConditionalList<'t>>,
@@ -211,8 +201,7 @@ pub struct Conditional<'t> {
 /// Type derived for non-terminal ConditionalList
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct ConditionalList<'t> {
     pub disjunction: Disjunction<'t>,
 }
@@ -221,8 +210,7 @@ pub struct ConditionalList<'t> {
 /// Type derived for non-terminal Conjunction
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Conjunction<'t> {
     pub factor: Factor<'t>,
     pub conjunction_list: Vec<ConjunctionList<'t>>,
@@ -232,8 +220,7 @@ pub struct Conjunction<'t> {
 /// Type derived for non-terminal ConjunctionList
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct ConjunctionList<'t> {
     pub factor: Factor<'t>,
 }
@@ -242,8 +229,7 @@ pub struct ConjunctionList<'t> {
 /// Type derived for non-terminal Disjunction
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Disjunction<'t> {
     pub conjunction: Conjunction<'t>,
     pub disjunction_list: Vec<DisjunctionList<'t>>,
@@ -253,8 +239,7 @@ pub struct Disjunction<'t> {
 /// Type derived for non-terminal DisjunctionList
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct DisjunctionList<'t> {
     pub conjunction: Conjunction<'t>,
 }
@@ -274,8 +259,7 @@ pub enum Factor<'t> {
 /// Type derived for non-terminal LPar
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct LPar<'t> {
     pub l_par: Token<'t>, /* ( */
 }
@@ -284,8 +268,7 @@ pub struct LPar<'t> {
 /// Type derived for non-terminal Negation
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Negation<'t> {
     pub factor: Factor<'t>,
 }
@@ -294,8 +277,7 @@ pub struct Negation<'t> {
 /// Type derived for non-terminal Not
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Not<'t> {
     pub not: Token<'t>, /* ! */
 }
@@ -304,8 +286,7 @@ pub struct Not<'t> {
 /// Type derived for non-terminal Or
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Or<'t> {
     pub or: Token<'t>, /* | */
 }
@@ -314,8 +295,7 @@ pub struct Or<'t> {
 /// Type derived for non-terminal RPar
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct RPar<'t> {
     pub r_par: Token<'t>, /* ) */
 }
@@ -324,8 +304,7 @@ pub struct RPar<'t> {
 /// Type derived for non-terminal RaaTt
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct RaaTt<'t> {
     pub raa_tt_list: Vec<RaaTtList<'t>>,
 }
@@ -334,8 +313,7 @@ pub struct RaaTt<'t> {
 /// Type derived for non-terminal RaaTtList
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct RaaTtList<'t> {
     pub biconditional: Biconditional<'t>,
 }
@@ -344,8 +322,7 @@ pub struct RaaTtList<'t> {
 /// Type derived for non-terminal Var
 ///
 #[allow(dead_code)]
-#[derive(Builder, Debug, Clone)]
-#[builder(crate = "parol_runtime::derive_builder")]
+#[derive(Debug, Clone)]
 pub struct Var<'t> {
     pub var: Token<'t>, /* [a-z][_a-zA-Z0-9]* */
 }
@@ -380,6 +357,8 @@ pub enum ASTType<'t> {
     Var(Var<'t>),
 }
 
+// -------------------------------------------------------------------------------------------------
+
 /// Auto-implemented adapter grammar
 ///
 /// The lifetime parameter `'t` refers to the lifetime of the scanned text.
@@ -410,7 +389,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
 
     #[allow(dead_code)]
     fn push(&mut self, item: ASTType<'t>, context: &str) {
-        trace!("push    {}: {:?}", context, item);
+        trace!("push    {context}: {item:?}");
         self.item_stack.push(item)
     }
 
@@ -418,7 +397,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
     fn pop(&mut self, context: &str) -> Option<ASTType<'t>> {
         let item = self.item_stack.pop();
         if let Some(ref item) = item {
-            trace!("pop     {}: {:?}", context, item);
+            trace!("pop     {context}: {item:?}");
         }
         item
     }
@@ -433,7 +412,7 @@ impl<'t, 'u> RaaTtGrammarAuto<'t, 'u> {
             self.item_stack
                 .iter()
                 .rev()
-                .map(|s| format!("  {:?}", s))
+                .map(|s| format!("  {s:?}"))
                 .collect::<Vec<std::string::String>>()
                 .join("\n")
         )
@@ -983,8 +962,7 @@ impl<'t> UserActionsTrait<'t> for RaaTtGrammarAuto<'t, '_> {
             25 => self.factor_1(&children[0]),
             26 => self.factor_2(&children[0], &children[1], &children[2]),
             _ => Err(ParserError::InternalError(format!(
-                "Unhandled production number: {}",
-                prod_num
+                "Unhandled production number: {prod_num}"
             ))
             .into()),
         }

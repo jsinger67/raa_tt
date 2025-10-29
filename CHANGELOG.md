@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.8.0 - 2025-10-29
+
+* Upgrade to parol 4.1
+* Upgrade other dependencies
+
+## 0.7.0 - 2025-03-14
+
+* Upgrade parol and parol_runtime to versions 3.0.1 and 3.0.0, respectively
+
 ## 0.6.0 - 2024-12-28
 
 * Upgrade to parol 2.0

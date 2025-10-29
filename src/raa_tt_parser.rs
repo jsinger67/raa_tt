@@ -4,36 +4,17 @@
 // lost after next build.
 // ---------------------------------------------------------
 
-use parol_runtime::once_cell::sync::Lazy;
-#[allow(unused_imports)]
-use parol_runtime::parser::{LLKParser, LookaheadDFA, ParseTreeType, ParseType, Production, Trans};
-use parol_runtime::{ParolError, ParseTree, TerminalIndex};
-use parol_runtime::{ScannerConfig, TokenStream, Tokenizer};
+use parol_runtime::{
+    ParolError, ParseTree, TokenStream,
+    parser::{
+        LLKParser, LookaheadDFA, ParseType, Production, Trans, parse_tree_type::TreeConstruct,
+    },
+};
+use scnr2::scanner;
 use std::path::Path;
 
 use crate::raa_tt_grammar::RaaTtGrammar;
 use crate::raa_tt_grammar_trait::RaaTtGrammarAuto;
-
-use parol_runtime::lexer::tokenizer::{
-    ERROR_TOKEN, NEW_LINE_TOKEN, UNMATCHABLE_TOKEN, WHITESPACE_TOKEN,
-};
-
-pub const TERMINALS: &[(&str, Option<(bool, &str)>); 14] = &[
-    /*  0 */ (UNMATCHABLE_TOKEN, None),
-    /*  1 */ (UNMATCHABLE_TOKEN, None),
-    /*  2 */ (UNMATCHABLE_TOKEN, None),
-    /*  3 */ (UNMATCHABLE_TOKEN, None),
-    /*  4 */ (UNMATCHABLE_TOKEN, None),
-    /*  5 */ (r"!", None),
-    /*  6 */ (r"\&", None),
-    /*  7 */ (r"\|", None),
-    /*  8 */ (r"\->", None),
-    /*  9 */ (r"<\->", None),
-    /* 10 */ (r"\(", None),
-    /* 11 */ (r"\)", None),
-    /* 12 */ (r"[a-z][_a-zA-Z0-9]*", None),
-    /* 13 */ (ERROR_TOKEN, None),
-];
 
 pub const TERMINAL_NAMES: &[&str; 14] = &[
     /*  0 */ "EndOfInput",
@@ -52,26 +33,24 @@ pub const TERMINAL_NAMES: &[&str; 14] = &[
     /* 13 */ "Error",
 ];
 
-/* SCANNER_0: "INITIAL" */
-const SCANNER_0: (&[&str; 5], &[TerminalIndex; 8]) = (
-    &[
-        /*  0 */ UNMATCHABLE_TOKEN,
-        /*  1 */ NEW_LINE_TOKEN,
-        /*  2 */ WHITESPACE_TOKEN,
-        /*  3 */ r"//.*(\r\n|\r|\n)?",
-        /*  4 */ UNMATCHABLE_TOKEN,
-    ],
-    &[
-        5,  /* Not */
-        6,  /* And */
-        7,  /* Or */
-        8,  /* Cond */
-        9,  /* BiCond */
-        10, /* LPar */
-        11, /* RPar */
-        12, /* Var */
-    ],
-);
+scanner! {
+    RaaTtGrammarScanner {
+        mode INITIAL {
+            token r"\r\n|\r|\n" => 1; // "Newline"
+            token r"[\s--\r\n]+" => 2; // "Whitespace"
+            token r"//.*(\r\n|\r|\n)?" => 3; // "LineComment"
+            token r"!" => 5; // "Not"
+            token r"\&" => 6; // "And"
+            token r"\|" => 7; // "Or"
+            token r"\->" => 8; // "Cond"
+            token r"<\->" => 9; // "BiCond"
+            token r"\(" => 10; // "LPar"
+            token r"\)" => 11; // "RPar"
+            token r"[a-z][_a-zA-Z0-9]*" => 12; // "Var"
+            token r"." => 13; // "Error"
+        }
+    }
+}
 
 const MAX_K: usize = 1;
 
@@ -398,14 +377,6 @@ pub const PRODUCTIONS: &[Production; 27] = &[
     },
 ];
 
-static SCANNERS: Lazy<Vec<ScannerConfig>> = Lazy::new(|| {
-    vec![ScannerConfig::new(
-        "INITIAL",
-        Tokenizer::build(TERMINALS, SCANNER_0.0, SCANNER_0.1).unwrap(),
-        &[],
-    )]
-});
-
 pub fn parse<'t, T>(
     input: &'t str,
     file_name: T,
@@ -414,6 +385,25 @@ pub fn parse<'t, T>(
 where
     T: AsRef<Path>,
 {
+    use parol_runtime::{
+        parser::{parse_tree_type::SynTree, parser_types::SynTreeFlavor},
+        syntree::Builder,
+    };
+    let mut builder = Builder::<SynTree, SynTreeFlavor>::new_with();
+    parse_into(input, &mut builder, file_name, user_actions)?;
+    Ok(builder.build()?)
+}
+#[allow(dead_code)]
+pub fn parse_into<'t, T: TreeConstruct<'t>>(
+    input: &'t str,
+    tree_builder: &mut T,
+    file_name: impl AsRef<Path>,
+    user_actions: &mut RaaTtGrammar<'t>,
+) -> Result<(), ParolError>
+where
+    ParolError: From<T::Error>,
+{
+    use raa_tt_grammar_scanner::RaaTtGrammarScanner;
     let mut llk_parser = LLKParser::new(
         17,
         LOOKAHEAD_AUTOMATA,
@@ -423,11 +413,19 @@ where
     );
     llk_parser.trim_parse_tree();
     llk_parser.disable_recovery();
-
+    let scanner = RaaTtGrammarScanner::new();
     // Initialize wrapper
     let mut user_actions = RaaTtGrammarAuto::new(user_actions);
-    llk_parser.parse(
-        TokenStream::new(input, file_name, &SCANNERS, MAX_K).unwrap(),
+    llk_parser.parse_into(
+        tree_builder,
+        TokenStream::new(
+            input,
+            file_name,
+            scanner.scanner_impl.clone(),
+            &RaaTtGrammarScanner::match_function,
+            MAX_K,
+        )
+        .unwrap(),
         &mut user_actions,
     )
 }
