@@ -1,4 +1,7 @@
-use std::{cell::RefCell, collections::BTreeMap};
+use std::{
+    cell::RefCell,
+    collections::{BTreeMap, BTreeSet},
+};
 
 use crate::{
     bi_implication::BiImplication,
@@ -10,6 +13,25 @@ use crate::{
     proposition::Proposition,
     truth_table::TruthTable,
 };
+
+/// Maximum number of variables allowed in truth table generation.
+///
+/// This limit prevents excessive memory usage and computation time.
+/// With 16 variables, the truth table would have 2^16 = 65,536 rows,
+/// requiring approximately 1MB of memory for boolean values alone.
+///
+/// Beyond this limit:
+/// - 17 variables: 131,072 rows (~2MB)
+/// - 20 variables: 1,048,576 rows (~16MB)
+/// - 25 variables: 33,554,432 rows (~512MB)
+///
+/// The exponential growth makes larger tables impractical for interactive use.
+const MAX_VARIABLES_IN_TRUTH_TABLE: usize = 16;
+
+/// Warning threshold for approaching the variable limit.
+/// When the number of variables exceeds this threshold, users should
+/// be warned about potential performance implications.
+const VARIABLE_WARNING_THRESHOLD: usize = 12;
 
 impl Proposition {
     fn calculate_value(&self, vars: &BTreeMap<String, bool>) -> Result<bool> {
@@ -225,27 +247,104 @@ impl TableGenerator {
     /// [`RaaError::VoidExpression`]: crate::errors::RaaError::VoidExpression
     /// [`RaaError::UndefinedVariable`]: crate::errors::RaaError::UndefinedVariable
     pub fn generate_truth_table(&self, proposition: &Proposition) -> Result<TruthTable> {
-        let vars = proposition.get_variables();
-        *self.vars.borrow_mut() = vars.iter().fold(BTreeMap::new(), |mut acc, v| {
-            acc.insert(v.clone(), false);
-            acc
-        });
-        if self.number_of_vars() > 16 {
-            return Err(RaaError::TooManyVariables(
-                self.number_of_vars() as usize,
-                16,
-            ));
-        }
+        // Early validation prevents expensive operations on invalid inputs
+        let variables = Self::extract_and_validate_variables(proposition)?;
+
+        // Initialize variable map only after validation succeeds
+        *self.vars.borrow_mut() =
+            variables
+                .iter()
+                .fold(BTreeMap::new(), |mut acc, variable_name| {
+                    acc.insert(variable_name.clone(), false);
+                    acc
+                });
+
         let header = self.generate_table_header(proposition);
-        let line_count = (2usize).pow(self.number_of_vars());
+        let variable_count = self.number_of_variables();
+        let line_count = (2usize).pow(variable_count as u32);
+
+        // Pre-allocate with exact capacity to avoid reallocations
         let lines = Vec::with_capacity(line_count);
-        let lines = (0..line_count).try_fold(lines, |mut lines, v| {
-            self.generate_table_line(v, proposition).map(|line| {
-                lines.push(line);
-                lines
-            })
+        let lines = (0..line_count).try_fold(lines, |mut lines, line_index| {
+            self.generate_table_line(line_index, proposition)
+                .map(|line| {
+                    lines.push(line);
+                    lines
+                })
         })?;
+
         Ok(TruthTable { header, lines })
+    }
+
+    /// Validates that the number of variables is within acceptable limits for truth table generation.
+    ///
+    /// This method performs early validation to prevent expensive operations on propositions
+    /// with too many variables. It also provides progressive warnings when approaching the limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `variable_count` - The number of unique variables in the proposition
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the variable count is within acceptable limits
+    /// * `Err(RaaError::TooManyVariables)` - If the variable count exceeds the maximum allowed
+    ///
+    /// # Performance
+    ///
+    /// This validation runs in O(1) time and should be called before any expensive
+    /// variable extraction or map initialization operations.
+    fn validate_variable_count(variable_count: usize) -> Result<()> {
+        if variable_count > MAX_VARIABLES_IN_TRUTH_TABLE {
+            let rows = (2u64).pow(variable_count as u32);
+            // Estimate memory usage: each row has variable_count + 1 booleans (1 byte each)
+            // Plus overhead for Vec structure
+            let memory_mb = (rows * (variable_count + 1) as u64) as f64 / (1024.0 * 1024.0);
+
+            return Err(RaaError::TooManyVariables {
+                current: variable_count,
+                max: MAX_VARIABLES_IN_TRUTH_TABLE,
+                rows,
+                memory_mb,
+            });
+        }
+
+        // Optional: Log performance warning for large variable counts
+        if variable_count > VARIABLE_WARNING_THRESHOLD {
+            eprintln!(
+                "Warning: {} variables will generate {} rows. This may take significant time and memory.",
+                variable_count,
+                (2u64).pow(variable_count as u32)
+            );
+        }
+
+        Ok(())
+    }
+
+    /// Extracts and validates variables from a proposition.
+    ///
+    /// This method combines variable extraction with early validation to prevent
+    /// unnecessary work on propositions that exceed the variable limit.
+    ///
+    /// # Arguments
+    ///
+    /// * `proposition` - The logical proposition to extract variables from
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(variables)` - Vector of unique variable names if validation passes
+    /// * `Err(RaaError::TooManyVariables)` - If too many variables are found
+    ///
+    /// # Performance Impact
+    ///
+    /// By validating early, this method prevents:
+    /// - Unnecessary BTreeMap allocation and initialization
+    /// - Redundant variable counting operations
+    /// - Expensive fold operations on large variable sets
+    fn extract_and_validate_variables(proposition: &Proposition) -> Result<BTreeSet<String>> {
+        let variables = proposition.get_variables();
+        Self::validate_variable_count(variables.len())?;
+        Ok(variables)
     }
 
     fn generate_table_header(&self, proposition: &Proposition) -> Vec<String> {
@@ -260,27 +359,42 @@ impl TableGenerator {
         header
     }
 
+    /// Returns the number of variables currently stored in the generator.
+    ///
+    /// This method provides a consistent interface for accessing the variable count
+    /// without exposing the internal RefCell structure.
+    ///
+    /// # Returns
+    ///
+    /// The number of variables as a usize (avoiding unnecessary type conversions)
     #[inline]
-    fn number_of_vars(&self) -> u32 {
-        self.vars.borrow().len() as u32
+    fn number_of_variables(&self) -> usize {
+        self.vars.borrow().len()
     }
 
-    fn generate_table_line(&self, v: usize, proposition: &Proposition) -> Result<Vec<bool>> {
-        let n = self.number_of_vars();
-        let mut bit = if n == 0 { 0 } else { 1 << (n - 1) };
-        let mut line =
-            self.vars
-                .borrow_mut()
-                .iter_mut()
-                .fold(Vec::new(), |mut acc, (_var, val)| {
-                    // Extract the variable value from the bits of number v which is increased for
-                    // each line outside.
-                    let b = (v & bit) != 0;
-                    *val = b;
-                    acc.push(b);
-                    bit >>= 1;
-                    acc
-                });
+    fn generate_table_line(
+        &self,
+        line_index: usize,
+        proposition: &Proposition,
+    ) -> Result<Vec<bool>> {
+        let variable_count = self.number_of_variables();
+        let mut bit_mask = if variable_count == 0 {
+            0
+        } else {
+            1 << (variable_count - 1)
+        };
+        let mut line = self.vars.borrow_mut().iter_mut().fold(
+            Vec::with_capacity(variable_count + 1),
+            |mut truth_values, (_variable_name, variable_value)| {
+                // Extract the variable value from the bits of line_index
+                // Each bit position corresponds to a variable's truth value
+                let current_bit_value = (line_index & bit_mask) != 0;
+                *variable_value = current_bit_value;
+                truth_values.push(current_bit_value);
+                bit_mask >>= 1;
+                truth_values
+            },
+        );
         let b = proposition.calculate_value(&self.vars.borrow())?;
         line.push(b);
         Ok(line)
