@@ -231,7 +231,10 @@ impl TableGenerator {
             acc
         });
         if self.number_of_vars() > 16 {
-            return Err(RaaError::TooManyVariables);
+            return Err(RaaError::TooManyVariables(
+                self.number_of_vars() as usize,
+                16,
+            ));
         }
         let header = self.generate_table_header(proposition);
         let line_count = (2usize).pow(self.number_of_vars());
