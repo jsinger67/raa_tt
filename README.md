@@ -84,7 +84,7 @@ use raa_tt::{
 
 // Parse and prove a formula
 let mut grammar = RaaTtGrammar::new();
-parse("p -> (q -> p)", &"example".into(), &mut grammar)?;
+parse("p -> (q -> p)", "example", &mut grammar)?;
 
 let proposition: Proposition = (&grammar.raa_tt.unwrap().raa_tt_list[0].biconditional).into();
 let prover = Prover::new();
@@ -731,6 +731,10 @@ at your option.
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+## Credits
+
+- [Parol](https://github.com/jsinger67/parol) for the parser generator
 
 ---
 
