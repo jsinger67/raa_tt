@@ -1,3 +1,44 @@
+//! # RaaTT - Propositional Logic Prover
+//!
+//! A Rust crate for propositional logic reasoning and theorem proving for sentences of
+//! propositional calculus using the analytic tableaux method (truth trees) and truth tables.
+//! This library provides comprehensive support for logical operations, proposition handling, and
+//! automated theorem proving.
+//!
+//! ## Features
+//!
+//! - **Logical Operators**: Support for all standard propositional logic operators including
+//!   conjunction, disjunction, implication, bi-implication, and negation
+//! - **Proposition System**: Flexible proposition representation and manipulation
+//! - **Theorem Prover**: Automated reasoning engine for validating logical arguments
+//! - **Truth Table Generation**: Comprehensive truth table construction and analysis
+//! - **Grammar Parsing**: Built-in parser for logical expressions using the RaaTT grammar
+//!
+//! ## Example
+//!
+//! ```rust
+//! use raa_tt::{
+//!     prover::{Prover, ProveResult},
+//!     proposition::Proposition,
+//!     raa_tt_parser::parse,
+//!     raa_tt_grammar::RaaTtGrammar,
+//! };
+//!
+//! // Parse and prove a formula
+//! let mut grammar = RaaTtGrammar::new();
+//! parse("p -> (q -> p)", "example", &mut grammar).expect("Failed to parse");
+//!
+//! let proposition: Proposition = (&grammar.raa_tt.unwrap().raa_tt_list[0].biconditional).into();
+//! let prover = Prover::new();
+//! let result = prover.prove(&proposition).expect("Failed to prove");
+//! match result {
+//!     ProveResult::Proven => println!("Tautology: Always true"),
+//!    ProveResult::Falsified => println!("Contradiction: Always false"),
+//!    ProveResult::Contingent => println!("Contingent: Depends on variables"),
+//!    _ => unreachable!(),
+//! }
+//! ```
+
 /// Module with the BiImplication struct and its implementation.
 pub mod bi_implication;
 /// Module with the Conjunction struct and its implementation.
