@@ -82,8 +82,8 @@ impl From<&crate::raa_tt_grammar_trait::RaaTtList<'_>> for Proposition {
 impl From<&crate::raa_tt_grammar_trait::Biconditional<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::Biconditional<'_>) -> Self {
         let crate::raa_tt_grammar_trait::Biconditional {
-            ref conditional,
-            ref biconditional_list,
+            conditional,
+            biconditional_list,
         } = value;
         if biconditional_list.is_empty() {
             conditional.into()
@@ -103,8 +103,8 @@ impl From<&crate::raa_tt_grammar_trait::Biconditional<'_>> for Proposition {
 impl From<&crate::raa_tt_grammar_trait::Conditional<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::Conditional<'_>) -> Self {
         let crate::raa_tt_grammar_trait::Conditional {
-            ref disjunction,
-            ref conditional_list,
+            disjunction,
+            conditional_list,
         } = value;
         if conditional_list.is_empty() {
             disjunction.into()
@@ -124,8 +124,8 @@ impl From<&crate::raa_tt_grammar_trait::Conditional<'_>> for Proposition {
 impl From<&crate::raa_tt_grammar_trait::Disjunction<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::Disjunction<'_>) -> Self {
         let crate::raa_tt_grammar_trait::Disjunction {
-            ref conjunction,
-            ref disjunction_list,
+            conjunction,
+            disjunction_list,
         } = value;
         if disjunction_list.is_empty() {
             conjunction.into()
@@ -145,8 +145,8 @@ impl From<&crate::raa_tt_grammar_trait::Disjunction<'_>> for Proposition {
 impl From<&crate::raa_tt_grammar_trait::Conjunction<'_>> for Proposition {
     fn from(value: &crate::raa_tt_grammar_trait::Conjunction<'_>) -> Self {
         let crate::raa_tt_grammar_trait::Conjunction {
-            ref factor,
-            ref conjunction_list,
+            factor,
+            conjunction_list,
         } = value;
         if conjunction_list.is_empty() {
             factor.into()

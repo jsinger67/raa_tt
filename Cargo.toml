@@ -5,7 +5,7 @@ categories = ["science", "mathematics", "parser-implementations"]
 description = "Proves sentences of propositional calculus"
 documentation = "https://docs.rs/raa_tt"
 repository = "https://github.com/jsinger67/raa_tt"
-edition = "2021"
+edition = "2024"
 keywords = ["propositional", "calculus"]
 license = "MIT OR Apache-2.0"
 
