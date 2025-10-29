@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 * Upgrade to parol 4.1
 * Upgrade other dependencies
+* Enhance documentation of public APIs
+* Improve error handling in truth table generation when the number of variable exceed the limit
+* Add variable count tests for truth table generation
 
 ## 0.7.0 - 2025-03-14
 
