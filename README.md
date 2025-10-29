@@ -59,6 +59,22 @@ or
 ```powershell
 $env:RUST_LOG="raa_tt=debug,raa_tt::raa_tt_grammar_trait=error"
 ```
+
+## Performance Benchmarks
+
+This crate includes comprehensive performance benchmarks to help detect regressions and understand performance characteristics. To run the benchmarks:
+
+```shell
+# Run all benchmarks
+cargo bench
+
+# Run specific component benchmarks
+cargo bench --bench prover_benchmarks
+cargo bench --bench table_generator_benchmarks
+```
+
+For detailed information about the benchmark suite, see [BENCHMARKS.md](BENCHMARKS.md).
+
 ## You found a bug?
 
 Please, file an issue.
