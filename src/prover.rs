@@ -93,17 +93,142 @@ impl Default for Prover {
 }
 
 impl Prover {
+    /// Creates a new instance of the Prover.
+    ///
+    /// This initializes the prover with an empty state, ready to analyze logical propositions
+    /// using the analytic tableaux (truth tree) method.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use raa_tt::prover::Prover;
+    ///
+    /// let prover = Prover::new();
+    /// ```
     pub fn new() -> Self {
         Self::default()
     }
-    /// This function tries do prove the given proposition by assuming the opposite and then
-    /// trying to find a contradiction. If a contradiction is found we have proven the logical
-    /// truth of the proposition.
+
+    /// Proves the logical validity of a proposition using the analytic tableaux (truth tree) method.
     ///
-    /// The return value of this function in case of `OK` is [crate::prover::ProveResult].
-    /// If the value is `SolveResult::Contradiction` then the proposition is L-TRUE.
-    /// The return value in case of `Err` is detailed in [crate::errors::RaaError].
+    /// This method implements a systematic proof technique that attempts to determine whether a
+    /// logical proposition is a tautology (always true), contradiction (always false), or
+    /// contingent (truth value depends on variable assignments).
     ///
+    /// ## Algorithm Overview
+    ///
+    /// The truth tree method works by:
+    /// 1. **Assumption**: Start by assuming the negation of the proposition to be proved
+    /// 2. **Decomposition**: Systematically break down complex logical formulas into simpler components
+    /// 3. **Branch Creation**: Create separate branches for disjunctive cases (OR-like operations)
+    /// 4. **Contradiction Detection**: Look for contradictions (P and ¬P on the same branch)
+    /// 5. **Closure**: Close branches that contain contradictions
+    /// 6. **Result**: If all branches close, the original proposition is proven; otherwise it's contingent or false
+    ///
+    /// The method applies transformation rules for each logical operator:
+    /// - **Conjunction (A ∧ B)**: Add both A and B to the current branch
+    /// - **Disjunction (A ∨ B)**: Create two branches, one with A and one with B
+    /// - **Implication (A → B)**: Create two branches, one with ¬A and one with B
+    /// - **Biimplication (A ↔ B)**: Create two branches, one with A∧B and one with ¬A∧¬B
+    /// - **Negation**: Apply De Morgan's laws and double negation elimination
+    ///
+    /// ## Complexity Analysis
+    ///
+    /// - **Time Complexity**: O(2^n) in the worst case, where n is the number of propositional variables.
+    ///   This exponential behavior occurs because the algorithm may need to explore all possible
+    ///   truth value assignments in pathological cases. However, many practical formulas can be
+    ///   resolved much faster due to early contradiction detection.
+    ///
+    /// - **Space Complexity**: O(2^n) in the worst case for storing the tree structure. The depth
+    ///   of the tree is bounded by the complexity of the formula, but the branching factor can
+    ///   lead to exponential space usage in the worst case.
+    ///
+    /// ## Examples
+    ///
+    /// ### Proving a Tautology (Modus Ponens)
+    /// ```
+    /// use raa_tt::{
+    ///     prover::{Prover, ProveResult},
+    ///     proposition::Proposition,
+    ///     conjunction::Conjunction,
+    ///     implication::Implication,
+    /// };
+    ///
+    /// // Prove: (P ∧ (P → Q)) → Q
+    /// let prover = Prover::new();
+    /// let proposition = Proposition::Implication(Implication {
+    ///     left: Box::new(Proposition::Conjunction(Conjunction {
+    ///         left: Box::new("P".into()),
+    ///         right: Box::new(Proposition::Implication(Implication {
+    ///             left: Box::new("P".into()),
+    ///             right: Box::new("Q".into()),
+    ///         })),
+    ///     })),
+    ///     right: Box::new("Q".into()),
+    /// });
+    ///
+    /// let result = prover.prove(&proposition).unwrap();
+    /// assert_eq!(result, ProveResult::Proven);
+    /// ```
+    ///
+    /// ### Testing a Simple Proposition
+    /// ```
+    /// use raa_tt::{
+    ///     prover::{Prover, ProveResult},
+    ///     proposition::Proposition,
+    ///     disjunction::Disjunction,
+    ///     negation::Negation,
+    /// };
+    ///
+    /// // Test: P ∨ ¬P (Law of Excluded Middle)
+    /// let prover = Prover::new();
+    /// let proposition = Proposition::Disjunction(Disjunction {
+    ///     left: Box::new("P".into()),
+    ///     right: Box::new(Proposition::Negation(Negation {
+    ///         inner: Box::new("P".into()),
+    ///     })),
+    /// });
+    ///
+    /// let result = prover.prove(&proposition).unwrap();
+    /// assert_eq!(result, ProveResult::Proven);
+    /// ```
+    ///
+    /// ### Detecting a Contradiction
+    /// ```
+    /// use raa_tt::{
+    ///     prover::{Prover, ProveResult},
+    ///     proposition::Proposition,
+    ///     conjunction::Conjunction,
+    ///     negation::Negation,
+    /// };
+    ///
+    /// // Test: P ∧ ¬P (contradiction)
+    /// let prover = Prover::new();
+    /// let proposition = Proposition::Conjunction(Conjunction {
+    ///     left: Box::new("P".into()),
+    ///     right: Box::new(Proposition::Negation(Negation {
+    ///         inner: Box::new("P".into()),
+    ///     })),
+    /// });
+    ///
+    /// let result = prover.prove(&proposition).unwrap();
+    /// assert_eq!(result, ProveResult::Falsified);
+    /// ```
+    ///
+    /// ## Return Values
+    ///
+    /// - [`ProveResult::Proven`]: The proposition is a tautology (logically true)
+    /// - [`ProveResult::Falsified`]: The proposition is a contradiction (logically false)
+    /// - [`ProveResult::Contingent`]: The proposition's truth value depends on variable assignments
+    ///
+    /// ## Errors
+    ///
+    /// Returns [`RaaError`] if the proposition contains invalid or void expressions.
+    ///
+    /// [`ProveResult::Proven`]: crate::prover::ProveResult::Proven
+    /// [`ProveResult::Falsified`]: crate::prover::ProveResult::Falsified
+    /// [`ProveResult::Contingent`]: crate::prover::ProveResult::Contingent
+    /// [`RaaError`]: crate::errors::RaaError
     pub fn prove(&self, proposition: &Proposition) -> Result<ProveResult> {
         let mut prove_result = self.try_prove(proposition, true)?;
         if prove_result == ProveResult::Contingent {
