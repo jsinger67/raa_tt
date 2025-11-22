@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.9.0 - 2025-11-22
+
+* As an example on how to use another error reporting crate than `codespan-reporting` which is the
+default in `parol_runtime`, the binary tool now features a custom error reporter based on `ariadne`.
+
+Use `cargo run --bin raa_tt -- -f error.txt` resp. `raa_tt -f error.txt` to see the error messages.
+I also turned on the error recovery of the parser again. This way multiple errors can be reported.
+
 ## 0.8.0 - 2025-10-29
 
 * Upgrade to parol 4.1

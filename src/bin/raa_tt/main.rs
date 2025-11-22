@@ -1,10 +1,12 @@
 extern crate parol_runtime;
 
 mod arguments;
+mod report;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use parol_runtime::{log::debug, Report};
+use parol_runtime::Report;
+use parol_runtime::log::debug;
 use raa_tt::prover::Prover;
 use raa_tt::raa_tt_grammar::RaaTtGrammar;
 use raa_tt::raa_tt_parser::parse;
@@ -12,12 +14,10 @@ use raa_tt::{proposition::Proposition, table_generator::TableGenerator};
 use std::{fs, time::Instant};
 
 use crate::arguments::CliArgs;
+use crate::report::ErrorReporter;
 
 // To generate on command line:
 // parol -f ./raa_tt.par -e ./raa_tt-exp.par -p ./src/raa_tt_parser.rs -a ./src/raa_tt_grammar_trait.rs -t RaaTtGrammar -m raa_tt_grammar --trim --disable-recovery --minbox
-
-struct ErrorReporter;
-impl Report for ErrorReporter {}
 
 fn main() -> Result<()> {
     let args = CliArgs::parse();

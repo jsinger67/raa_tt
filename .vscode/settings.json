@@ -3,6 +3,7 @@
     "Biconditional",
     "biimplication",
     "clsd",
+    "codespan",
     "Cond",
     "Dreierschluss",
     "eprintln",
