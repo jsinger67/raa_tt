@@ -5,7 +5,6 @@ mod report;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use parol_runtime::Report;
 use parol_runtime::log::debug;
 use raa_tt::prover::Prover;
 use raa_tt::raa_tt_grammar::RaaTtGrammar;
@@ -71,6 +70,6 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        Err(e) => ErrorReporter::report_error(&e, file_name),
+        Err(e) => ErrorReporter::report_error_with_content(&e, file_name, &input),
     }
 }

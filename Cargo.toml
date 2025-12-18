@@ -1,6 +1,6 @@
 [package]
 name = "raa_tt"
-version = "0.9.0"
+version = "0.9.1"
 categories = ["science", "mathematics", "parser-implementations"]
 description = "Proves sentences of propositional calculus"
 documentation = "https://docs.rs/raa_tt"
@@ -22,10 +22,10 @@ scnr2 = "0.3.3"
 thiserror = "2.0"
 
 [dev-dependencies]
-criterion = { version = "0.7.0", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 
 [build-dependencies]
-parol = "4.1"
+parol = "4.2"
 
 # For faster builds.
 [profile.dev.build-override]

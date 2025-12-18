@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 0.9.1 - 2025-12-18
+
+* Improve error reporting when working with direct input text (-s)
+* Update dependencies
+
 ## 0.9.0 - 2025-11-22
 
 * As an example on how to use another error reporting crate than `codespan-reporting` which is the

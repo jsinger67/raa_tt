@@ -8,14 +8,18 @@ use std::path::Path;
 #[derive(Debug)]
 pub struct ErrorReporter;
 
-impl Report for ErrorReporter {
-    fn report_error<T>(err: &ParolError, file_name: T) -> anyhow::Result<()>
+impl ErrorReporter {
+    pub fn report_error_with_content<T>(
+        err: &ParolError,
+        file_name: T,
+        content: &str,
+    ) -> anyhow::Result<()>
     where
         T: AsRef<Path>,
     {
         let path = file_name.as_ref();
         let file_n = path.to_string_lossy().to_string();
-        let content = fs::read_to_string(path).unwrap_or_default();
+        let content = content.to_string();
 
         let report_lexer_error = |err: &LexerError| -> anyhow::Result<()> {
             match err {
@@ -97,7 +101,7 @@ impl Report for ErrorReporter {
                     } in entries
                     {
                         if let Some(source) = source {
-                            Self::report_error(source, file_name.as_ref())?;
+                            Self::report_error_with_content(source, file_name.as_ref(), &content)?;
                         }
                         let (range, unexpected_token): (Range<usize>, String) =
                             if let Some(unexpected_token) = unexpected_tokens.iter().next() {
@@ -203,7 +207,7 @@ impl Report for ErrorReporter {
         }
     }
 
-    fn report_user_error(err: &anyhow::Error) -> anyhow::Result<()> {
+    pub fn report_user_error(err: &anyhow::Error) -> anyhow::Result<()> {
         AriadneReport::build(ReportKind::Error, ("User error", 0..0))
             .with_message("User error")
             .with_note(err.to_string())
@@ -214,5 +218,20 @@ impl Report for ErrorReporter {
             .finish()
             .eprint(("User error", Source::from("")))
             .map_err(|e| anyhow::anyhow!(e))
+    }
+}
+
+impl Report for ErrorReporter {
+    fn report_error<T>(err: &ParolError, file_name: T) -> anyhow::Result<()>
+    where
+        T: AsRef<Path>,
+    {
+        let path = file_name.as_ref();
+        let content = fs::read_to_string(path).unwrap_or_default();
+        Self::report_error_with_content(err, file_name, &content)
+    }
+
+    fn report_user_error(err: &anyhow::Error) -> anyhow::Result<()> {
+        Self::report_user_error(err)
     }
 }
