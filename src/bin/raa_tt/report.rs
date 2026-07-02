@@ -196,6 +196,14 @@ impl ErrorReporter {
                         .finish()
                         .eprint((file_n.clone(), Source::from(&content)))?
                 }
+                ParserError::MaxParsingDepthExceeded { depth } => {
+                    AriadneReport::build(ReportKind::Error, (file_n.clone(), 0..0))
+                        .with_message(format!("Maximum parsing depth ({depth}) exceeded"))
+                        .with_note("The parser has stopped because the maximum allowed parsing depth was exceeded.")
+                        .with_note("Consider checking for infinite recursion in your grammar rules.")
+                        .finish()
+                        .eprint((file_n.clone(), Source::from(&content)))?
+                }
             }
             Ok(())
         };

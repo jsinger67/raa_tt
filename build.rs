@@ -34,6 +34,7 @@ fn main() {
             .user_trait_module_name("raa_tt_grammar")
             .trim_parse_tree()
             // .disable_recovery()
+            .max_parsing_depth(600)
             .generate_parser()
         {
             ParolErrorReporter::report_error(&err, "raa_tt.par").unwrap_or_default();
